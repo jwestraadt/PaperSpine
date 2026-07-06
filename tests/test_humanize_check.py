@@ -60,12 +60,34 @@ class HumanizeCheckTests(unittest.TestCase):
         self.assertIn("PASS", md)
 
     def test_json_output(self) -> None:
+        # Regression: this test used to build a dict locally and round-trip it
+        # through json.dumps/loads — it exercised the stdlib, not the script's
+        # real --json path. Run the CLI and assert its actual JSON contract.
         import json
-        result = HumanizeCheckResult("test.md", False)
-        result.findings = ["gap"]
-        output = json.dumps({"ok": result.ok, "findings": result.findings})
-        data = json.loads(output)
-        self.assertFalse(data["ok"])
+        import subprocess
+
+        out = self._make_out_dir(**{
+            "humanize_matrix.md": (
+                "| Row ID | Unit | AI Pattern Found | Detection Dim | Severity "
+                "| Applied Change | Expected Effect | Teaching Note |\n"
+                "|---|---|---|---|---|---|---|---|\n"
+                "| 1 | P1 | uniform | sentence structure | High | varied | lower | why |\n"
+            ),
+        })
+        script = Path(__file__).resolve().parents[1] / "src" / "scripts" / "humanize_check.py"
+        result = subprocess.run(
+            [sys.executable, str(script), str(out), "--json"],
+            text=True, encoding="utf-8", errors="replace",
+            capture_output=True, check=False,
+        )
+        self.assertIn(result.returncode, (0, 1), result.stderr)
+        data = json.loads(result.stdout)
+        # The real JSON contract: these keys come from main()'s --json branch,
+        # not a dict the test constructed.
+        for key in ("ok", "humanize_tier", "dimension_results", "findings"):
+            self.assertIn(key, data)
+        self.assertIsInstance(data["ok"], bool)
+        self.assertIsInstance(data["dimension_results"], dict)
 
 
 if __name__ == "__main__":
