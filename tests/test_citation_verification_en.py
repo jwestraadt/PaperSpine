@@ -103,6 +103,32 @@ class YearMismatchTests(unittest.TestCase):
             self.assertNotIn("(", captured[0])
 
 
+class CrossrefOutageTests(unittest.TestCase):
+    def test_total_outage_degrades_to_skipped_not_failed(self) -> None:
+        # Regression: checked_count was incremented before the fetch and never
+        # rolled back on network failure, so a total Crossref outage produced
+        # matched=0/checked>0 and failed the whole run — contradicting the
+        # documented "SKIPPED rather than failing" behaviour.
+        with tempfile.TemporaryDirectory() as tmp:
+            bank = _write_bank(
+                Path(tmp),
+                [
+                    ("C1", "Smith J. A study. 2018. doi:10.1234/a.2018"),
+                    ("C2", "Doe J. Another study. 2019. doi:10.1234/b.2019"),
+                ],
+            )
+
+            def down_fetch(url: str, timeout: int = 15):
+                return None  # every request fails (API unreachable)
+
+            result = cve.verify_citation(bank, _fetcher=down_fetch)
+
+            self.assertTrue(result.ok, result.findings)
+            self.assertEqual(result.matched_count, 0)
+            self.assertEqual(result.checked_count, 0)
+            self.assertEqual(result.skipped_count, 2)
+
+
 class ModuleApiTests(unittest.TestCase):
     def test_module_uses_urllib_parse_quote(self) -> None:
         import urllib.parse

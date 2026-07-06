@@ -256,6 +256,22 @@ class WordGuardTests(unittest.TestCase):
             result = run_guard(docx, min_chars=50)
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
 
+    def test_venue_year_parenthetical_does_not_warn(self) -> None:
+        # Regression: the author-year pattern made the comma optional, so a
+        # venue or month like "(NeurIPS 2023)" / "(March 2021)" was flagged as
+        # a forbidden author-year citation and failed a clean docx. A real
+        # citation needs a comma before the year or an "et al." marker.
+        with tempfile.TemporaryDirectory() as tmp:
+            docx = Path(tmp) / "paper.docx"
+            (Path(tmp) / "main.tex").write_text(
+                "\\bibliographystyle{ieeetr}", encoding="utf-8")
+            make_docx(docx, [
+                "The workshop was held at (NeurIPS 2023) and a follow up in "
+                "(March 2021); numeric refs [1] appear throughout the body text. " * 6,
+            ])
+            result = run_guard(docx, min_chars=50)
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+
     def test_author_year_citation_without_tex_fails(self) -> None:
         # Regression: a docx rendered author-year with no source .tex used to pass
         # silently. The skill's default rule is plain numeric [1].

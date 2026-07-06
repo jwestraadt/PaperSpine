@@ -135,6 +135,22 @@ Grouped \cite{a,missingkey} here. """ + "x " * 60 + "\n"
         self.assertIn("Orphan", joined)
         self.assertIn("missingkey", joined)
 
+    def test_orphan_citation_detects_key_with_optional_args(self) -> None:
+        # Regression: CITATION_RE required "{" immediately after \cite\w*, so a
+        # hallucinated key inside \citep[see][p.5]{ghost} escaped the orphan
+        # scan entirely (no BLOCKER raised).
+        tmp = _make_out_dir(**{
+            "final_paper/main.tex": (
+                r"""\section{Intro}
+Background \citep[see][p.5]{ghost2020} claim. """ + "x " * 60 + "\n"
+            ),
+            "final_paper/references.bib": "@article{real2024, title={Real}}\n",
+        })
+        dim = audit_integrity_patterns(tmp, {})
+        joined = " ".join(f.what_was_found for f in dim.findings)
+        self.assertIn("Orphan", joined)
+        self.assertIn("ghost2020", joined)
+
     def test_audit_process_language_flags_meta_narrative(self) -> None:
         tmp = _make_out_dir(**{
             "final_paper/main.tex": (

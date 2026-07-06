@@ -154,5 +154,8 @@ def markdown_tables(text: str) -> list[list[list[str]]]:
 
 def year_from_row(row: list[str]) -> int | None:
     joined = " ".join(row)
-    years = [int(value) for value in re.findall(r"\b(19\d{2}|20\d{2})\b", joined)]
+    # Digit-boundary lookarounds instead of \b: a year glued to a CJK char
+    # (e.g. "2024年", common in Chinese references) has no \b after the digit
+    # because CJK ideographs are word characters, so \b would reject it.
+    years = [int(value) for value in re.findall(r"(?<!\d)(19\d{2}|20\d{2})(?!\d)", joined)]
     return max(years) if years else None

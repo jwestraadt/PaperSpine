@@ -80,7 +80,15 @@ AUTHOR_DATE_BIB_STYLES = frozenset({
 })
 BIBSTYLE_PATTERN = re.compile(r"\\bibliographystyle\{([^}]+)\}")
 NUMERIC_CITE_PATTERN = re.compile(r"\[\d+(?:\s*[,–-]\s*\d+)*\]")
-AUTHOR_DATE_CITE_PATTERN = re.compile(r"\([A-Z][A-Za-z'’.-]+(?:\s+et al\.?)?,?\s+\d{4}[a-z]?\)")
+# A real author-date citation has a comma before the year (Smith, 2023) or an
+# "et al." marker (Smith et al. 2023). A bare "(Capitalized Year)" such as
+# "(NeurIPS 2023)" or "(March 2021)" is a venue or month, not a citation, and
+# must not be flagged.
+AUTHOR_DATE_CITE_PATTERN = re.compile(
+    r"\([A-Z][A-Za-z'’.-]+(?:\s+(?:and|&)\s+[A-Z][A-Za-z'’.-]+)?(?:\s+et al\.?)?,\s+\d{4}[a-z]?\)"
+    r"|"
+    r"\([A-Z][A-Za-z'’.-]+(?:\s+(?:and|&)\s+[A-Z][A-Za-z'’.-]+)?\s+et al\.?\s+\d{4}[a-z]?\)"
+)
 
 
 def citation_style_finding(docx_text: str, source_tex: str) -> str | None:

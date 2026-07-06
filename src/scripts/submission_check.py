@@ -123,8 +123,11 @@ def read_config(output_dir: Path) -> dict[str, object]:
         if not candidate.exists():
             continue
         try:
-            return json.loads(candidate.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
+            # utf-8-sig tolerates a BOM (artifact_check/progress_check read the
+            # config this way, so BOM'd configs occur in this pipeline);
+            # UnicodeDecodeError guards against a non-UTF-8 (e.g. GBK) config.
+            return json.loads(candidate.read_text(encoding="utf-8-sig"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
             return {}
     return {}
 

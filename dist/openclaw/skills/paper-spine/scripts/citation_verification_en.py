@@ -461,9 +461,13 @@ def verify_citation(
             data = fetch(doi_url)  # type: ignore[call-arg]
 
             if data is None:
-                # API / network failure → warning, don't crash
+                # API / network failure → warning, don't crash. Roll back the
+                # checked_count increment: a row we could not reach was not
+                # actually checked, so it must not drag the match rate to 0
+                # and fail the whole run (docstring promises SKIPPED, not FAIL).
                 entry.status = "warning"
                 entry.note = "Crossref API unreachable (DOI lookup) — skipped"
+                result.checked_count -= 1
                 result.skipped_count += 1
                 result.entries.append(entry)
                 continue
@@ -515,8 +519,12 @@ def verify_citation(
             data = fetch(bib_url)  # type: ignore[call-arg]
 
             if data is None:
+                # See the DOI-lookup branch: a network-failed row was not
+                # actually checked, so roll back checked_count to avoid a
+                # spurious 0% match-rate FAIL during a Crossref outage.
                 entry.status = "warning"
                 entry.note = "Crossref API unreachable (bibliographic query) — skipped"
+                result.checked_count -= 1
                 result.skipped_count += 1
                 result.entries.append(entry)
                 continue

@@ -113,6 +113,22 @@ def valid_citation_bank(count: int = 60) -> str:
     return "\n".join(lines)
 
 
+sys.path.insert(0, str(ROOT / "src" / "scripts"))
+import artifact_check  # noqa: E402
+
+
+class MojibakePatternTests(unittest.TestCase):
+    def test_legitimate_traditional_chinese_not_flagged(self) -> None:
+        # Regression: bare single-char alternatives (鍛 / ╘) matched one
+        # legitimate Traditional Chinese 鍛 (as in 鍛造/鍛煉) and hard-failed
+        # the gate on real content.
+        self.assertIsNone(artifact_check.MOJIBAKE_PATTERN.search("鍛造工藝與鍛煉"))
+
+    def test_real_garble_signature_still_flagged(self) -> None:
+        self.assertIsNotNone(artifact_check.MOJIBAKE_PATTERN.search("prefix鍛╘suffix"))
+        self.assertIsNotNone(artifact_check.MOJIBAKE_PATTERN.search("锛涓鏂 garbled"))
+
+
 def run_check(output_dir: Path, workflow: str, *extra_args: str) -> subprocess.CompletedProcess[str]:
     args = [
         sys.executable,

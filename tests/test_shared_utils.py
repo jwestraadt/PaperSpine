@@ -25,6 +25,19 @@ from _paper_spine_utils import (
 )
 
 
+class YearFromRowTests(unittest.TestCase):
+    def test_year_glued_to_cjk_is_found(self) -> None:
+        # Regression: \b after the final digit fails when a CJK char follows
+        # (CJK ideographs are word chars), so "2024年" yielded no year.
+        self.assertEqual(year_from_row(["C1", "张三. 某研究. 2024年"]), 2024)
+
+    def test_plain_year_still_found(self) -> None:
+        self.assertEqual(year_from_row(["C1", "Smith et al. 2023."]), 2023)
+
+    def test_year_glued_to_more_digits_is_ignored(self) -> None:
+        self.assertIsNone(year_from_row(["C1", "identifier 20245 code"]))
+
+
 class SharedUtilsTests(unittest.TestCase):
     def test_read_text_utf8(self) -> None:
         try:

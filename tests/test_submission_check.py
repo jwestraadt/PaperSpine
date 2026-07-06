@@ -19,6 +19,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "src" / "scripts" / "submission_check.py"
+sys.path.insert(0, str(ROOT / "src" / "scripts"))
+import submission_check  # noqa: E402
 
 COVER_EN = (
     "Dear Editor,\n\n"
@@ -103,6 +105,30 @@ def run(pkg: Path) -> subprocess.CompletedProcess[str]:
         cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=False,
     )
+
+
+class ReadConfigTests(unittest.TestCase):
+    def test_bom_prefixed_config_parses(self) -> None:
+        # Regression: read_config used encoding="utf-8" (not utf-8-sig), so a
+        # BOM'd config raised JSONDecodeError, was swallowed to {}, and a zh
+        # run wrongly defaulted output_language to "en".
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "paper_spine_config.json").write_text(
+                '{"output_language": "zh"}', encoding="utf-8-sig"
+            )
+            config = submission_check.read_config(out)
+            self.assertEqual(config.get("output_language"), "zh")
+            self.assertEqual(submission_check.output_language(config), "zh")
+
+    def test_non_utf8_config_does_not_crash(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "paper_spine_config.json").write_bytes(
+                '{"output_language": "中文"}'.encode("gbk")
+            )
+            # Must degrade to {} rather than raising UnicodeDecodeError.
+            self.assertEqual(submission_check.read_config(out), {})
 
 
 class SubmissionCheckTests(unittest.TestCase):

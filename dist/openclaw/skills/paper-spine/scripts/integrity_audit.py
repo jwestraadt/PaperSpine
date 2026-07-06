@@ -317,7 +317,10 @@ def audit_evidence_chain(out_dir: Path, config: dict) -> AuditDimension:
 # Dimension 4 — Integrity Pattern Scan
 # ---------------------------------------------------------------------------
 
-CITATION_RE = re.compile(r"\\cite\w*\{([^}]+)\}")
+# Allow up to two optional arguments so keys inside \citep[see][p.5]{key}
+# are still extracted (mirrors _paper_spine_utils.normalize_tex); otherwise a
+# hallucinated key carrying optional args escapes the orphan-citation scan.
+CITATION_RE = re.compile(r"\\cite\w*\*?(?:\[[^\]]*\]){0,2}\{([^}]+)\}")
 P_VALUE_RE = re.compile(r"p\s*[<>=]\s*0\.0[15](?!\d)")
 UNREALISTIC_RE = re.compile(r"\b\d+\.\d{5,}\b")
 WEAK_WORDS = {"clearly", "obviously", "undoubtedly", "without a doubt", "it is clear that"}

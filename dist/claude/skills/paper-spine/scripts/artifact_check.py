@@ -209,7 +209,10 @@ DOWNSTREAM_UPSTREAM_PAIRS = (
     ("logic_transfer_audit.md", "rewrite_matrix.md"),
 )
 
-MOJIBAKE_PATTERN = re.compile(r'(?:[锛涓鏂鐢璇鈥�閿涙稉閺傞悽鐠囬垾絔]{3,}|鍛╘|鍛|╘)')
+# Require a multi-character garble signature. The bare single-char
+# alternatives that used to be here matched one legitimate Traditional
+# Chinese 鍛 (as in 鍛造/鍛煉) and hard-failed the gate on real content.
+MOJIBAKE_PATTERN = re.compile(r'(?:[锛涓鏂鐢璇鈥�閿涙稉閺傞悽鐠囬垾絔]{3,}|鍛╘)')
 
 MOJIBAKE_CRITICAL = (
     "paper_spine_config.json",
