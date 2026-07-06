@@ -36,6 +36,21 @@ SUITE_SKILLS = (
     "paper-spine",
 )
 
+# Hermes nests the skill under an academic-writing namespace (mirrors
+# sync_local_installs.HERMES_CATEGORY).
+HERMES_CATEGORY = "academic-writing"
+
+
+def default_hermes_skills_dir(home: Path) -> Path:
+    """Platform-appropriate default Hermes skills dir.
+
+    Windows uses the LocalAppData layout; other platforms use an
+    XDG-style data dir instead of a bogus ~/AppData tree.
+    """
+    if os.name == "nt":
+        return home / "AppData" / "Local" / "hermes" / "skills"
+    return home / ".local" / "share" / "hermes" / "skills"
+
 
 class UpdateError(RuntimeError):
     """Raised for expected updater failures."""
@@ -46,7 +61,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--check-only", action="store_true", help="Only check whether an update is available.")
     parser.add_argument(
         "--target",
-        choices=("all", "codex", "claude", "openclaw"),
+        choices=("all", "codex", "claude", "openclaw", "hermes"),
         default="all",
         help="Install target to update. Default: all.",
     )
@@ -279,22 +294,26 @@ def target_paths(target: str) -> dict[str, Path]:
     home = Path.home()
     paths = {
         "codex": Path(os.environ.get("PAPERSPINE_CODEX_SKILLS_DIR", home / ".codex" / "skills")),
+        "codex_prompts": Path(os.environ.get("PAPERSPINE_CODEX_PROMPTS_DIR", home / ".codex" / "prompts")),
         "claude_skills": Path(os.environ.get("PAPERSPINE_CLAUDE_SKILLS_DIR", home / ".claude" / "skills")),
         "claude_commands": Path(os.environ.get("PAPERSPINE_CLAUDE_COMMANDS_DIR", home / ".claude" / "commands")),
         "openclaw": Path(os.environ.get("PAPERSPINE_OPENCLAW_SKILLS_DIR", home / ".openclaw" / "skills")),
+        "hermes": Path(os.environ.get("PAPERSPINE_HERMES_SKILLS_DIR", default_hermes_skills_dir(home))),
     }
     if target == "codex":
-        return {"codex": paths["codex"]}
+        return {"codex": paths["codex"], "codex_prompts": paths["codex_prompts"]}
     if target == "claude":
         return {"claude_skills": paths["claude_skills"], "claude_commands": paths["claude_commands"]}
     if target == "openclaw":
         return {"openclaw": paths["openclaw"]}
+    if target == "hermes":
+        return {"hermes": paths["hermes"]}
     return paths
 
 
 def target_names(target: str) -> list[str]:
     if target == "all":
-        return ["codex", "claude", "openclaw"]
+        return ["codex", "claude", "openclaw", "hermes"]
     return [target]
 
 
@@ -314,6 +333,17 @@ def install_target(root: Path, target: str) -> list[str]:
             for existing in paths["codex"].iterdir():
                 if existing.is_dir() and existing.name.startswith("paper-spine") and existing.name not in current_skills:
                     shutil.rmtree(existing)
+        # Install the Codex /paperspine prompt entry point (validate_repo
+        # requires dist/codex/prompts/paperspine.md; it must reach the user).
+        if "codex_prompts" in paths:
+            prompts_source = root / "dist" / "codex" / "prompts"
+            current_prompts = {f.name for f in prompts_source.glob("*.md")}
+            paths["codex_prompts"].mkdir(parents=True, exist_ok=True)
+            for prompt_file in prompts_source.glob("*.md"):
+                copy_file(prompt_file, paths["codex_prompts"] / prompt_file.name)
+            for existing in paths["codex_prompts"].glob("*.md"):
+                if existing.name.startswith("paperspine") and existing.name not in current_prompts:
+                    existing.unlink()
         installed.append("codex")
     if "claude_skills" in paths:
         source = root / "dist" / "claude" / "skills"
@@ -345,6 +375,19 @@ def install_target(root: Path, target: str) -> list[str]:
                 if existing.is_dir() and existing.name.startswith("paper-spine") and existing.name not in current_skills:
                     shutil.rmtree(existing)
         installed.append("openclaw")
+    if "hermes" in paths:
+        # Hermes nests the skill under the academic-writing namespace
+        # (validate_repo requires it; it was never being installed).
+        source = root / "dist" / "hermes" / "skills" / HERMES_CATEGORY
+        dest_base = paths["hermes"] / HERMES_CATEGORY
+        for skill_dir in source.iterdir():
+            if skill_dir.is_dir():
+                replace_tree(skill_dir, dest_base / skill_dir.name)
+        if dest_base.exists():
+            for existing in dest_base.iterdir():
+                if existing.is_dir() and existing.name.startswith("paper-spine") and existing.name not in current_skills:
+                    shutil.rmtree(existing)
+        installed.append("hermes")
     return installed
 
 

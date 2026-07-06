@@ -92,9 +92,11 @@ class PaperSpineUpdateScriptTests(unittest.TestCase):
         env.update(
             {
                 "PAPERSPINE_CODEX_SKILLS_DIR": str(base / "codex" / "skills"),
+                "PAPERSPINE_CODEX_PROMPTS_DIR": str(base / "codex" / "prompts"),
                 "PAPERSPINE_CLAUDE_SKILLS_DIR": str(base / "claude" / "skills"),
                 "PAPERSPINE_CLAUDE_COMMANDS_DIR": str(base / "claude" / "commands"),
                 "PAPERSPINE_OPENCLAW_SKILLS_DIR": str(base / "openclaw" / "skills"),
+                "PAPERSPINE_HERMES_SKILLS_DIR": str(base / "hermes" / "skills"),
             }
         )
         return subprocess.run(
@@ -137,13 +139,19 @@ class PaperSpineUpdateScriptTests(unittest.TestCase):
             result = self.run_updater(base, archive, "--yes")
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
             self.assertTrue((base / "codex" / "skills" / "paper-spine" / "SKILL.md").exists())
+            # Codex /paperspine prompt must be installed, not just the skill.
+            self.assertTrue((base / "codex" / "prompts" / "paperspine.md").exists())
             self.assertTrue((base / "claude" / "skills" / "paper-spine" / "SKILL.md").exists())
             self.assertTrue((base / "claude" / "commands" / "paperspine.md").exists())
             self.assertTrue((base / "openclaw" / "skills" / "paper-spine" / "SKILL.md").exists())
+            # Hermes skill must be installed under the academic-writing namespace.
+            self.assertTrue(
+                (base / "hermes" / "skills" / "academic-writing" / "paper-spine" / "SKILL.md").exists()
+            )
             self.assertEqual(json.loads((base / "config" / "config.json").read_text(encoding="utf-8")), config)
             state = json.loads((base / "config" / "install_state.json").read_text(encoding="utf-8"))
             self.assertEqual(state["installed_version"], "2.0.0-rc.3")
-            self.assertEqual(state["targets"], ["codex", "claude", "openclaw"])
+            self.assertEqual(state["targets"], ["codex", "claude", "openclaw", "hermes"])
 
     def test_broken_archive_fails_without_overwriting_existing_install(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
