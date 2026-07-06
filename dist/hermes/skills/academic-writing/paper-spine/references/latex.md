@@ -43,17 +43,27 @@ never leave an older `paper.pdf` beside a newer `main.pdf`.
 `artifact_check.py` fails stale or mismatched `paper.pdf`.
 
 **Citation mechanism (hard rule):** Every in-text citation must be a real
-`\cite{key}` linked to a bibliography entry — either `\bibliographystyle{unsrt}`
-(or `plain`/`ieeetr`) + `\bibliography{references.bib}`, or a `thebibliography`
-block whose `\bibitem{key}` entries are reached by `\cite{key}`. Never type the
-bracket number as literal text: a hand-typed `[1]` is inert and links to nothing
-in either the PDF or the .docx, and the numbering silently desyncs if the
-reference list reorders. A numeric `bibliographystyle`/CSL still renders as `[1]`
-or `[3,12,13]`, so the visible plain-numeric style is preserved. Author-year
-citations and extra-parenthesized numeric citations such as `([15])` are
-forbidden. Do not use superscript for these citations unless the target journal
-explicitly requires it. `latex_guard.py` fails literal-bracket citations that
-have no `\cite` and flags numbering that exceeds the reference-entry count.
+`\cite{key}` linked to a bibliography entry. Never type the bracket number as
+literal text: a hand-typed `[1]` is inert and links to nothing in either the
+PDF or the .docx, and the numbering silently desyncs if the reference list
+reorders. Author-year citations and extra-parenthesized numeric citations such
+as `([15])` are forbidden. Do not use superscript for these citations unless the
+target journal explicitly requires it. `latex_guard.py` fails literal-bracket
+citations that have no `\cite` and flags numbering that exceeds the
+reference-entry count.
+
+**Use a `.bib` file, not a hand-written `thebibliography` block, whenever Word
+is a deliverable.** Author `\bibliographystyle{unsrt}` (or `plain`/`ieeetr`) +
+`\bibliography{references}` with a real `references.bib`. A `thebibliography`
+block compiles fine in the PDF, but **pandoc silently drops the in-text
+`\cite` markers when converting it to .docx** — the reference *list* renders
+while every in-text citation vanishes, leaving a Word file whose body cites
+nothing. Only the `.bib` + `--citeproc --bibliography=references.bib` path
+produces linked in-text citations in the .docx. (The `.bib` path also lets
+`bibtex`/`biber` build the PDF.) See the numeric-CSL note under **English Word
+Output** — `--citeproc` alone defaults to author-date, which `word_guard.py`
+rejects; a numeric CSL is required to keep the visible `[1]` / `[3,12,13]`
+style.
 
 **Title (hard rule):** `main.tex` must contain `\title{...}` (with the paper's
 title) and `\maketitle` after `\begin{document}`. Word output must begin with
@@ -74,13 +84,47 @@ checks the .docx.
 
 ## English Word Output
 
-From `final_paper/`:
+From `final_paper/`. First write a minimal numeric CSL beside the paper (pandoc
+does not ship one), then convert with `--citeproc` pointed at it:
 
 ```bash
+# final_paper/numeric.csl — makes pandoc render [1] / [3,12,13] instead of
+# author-date (pandoc's citeproc defaults to Chicago author-date, which
+# word_guard.py rejects as an author-year citation).
+cat > numeric.csl <<'CSL'
+<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" default-locale="en-US">
+  <info><title>Numeric</title><id>paperspine-numeric</id><updated>2000-01-01T00:00:00+00:00</updated></info>
+  <citation collapse="citation-number">
+    <sort><key variable="citation-number"/></sort>
+    <layout prefix="[" suffix="]" delimiter=",">
+      <text variable="citation-number"/>
+    </layout>
+  </citation>
+  <bibliography>
+    <sort><key variable="citation-number"/></sort>
+    <layout>
+      <text variable="citation-number" prefix="[" suffix="] "/>
+      <names variable="author" suffix=". "><name delimiter=", " and="text" initialize-with=". "/></names>
+      <text variable="title" suffix=". "/>
+      <text variable="container-title" suffix=", "/>
+      <date variable="issued" suffix="."><date-part name="year"/></date>
+    </layout>
+  </bibliography>
+</style>
+CSL
+
 pandoc main.tex -o paper.docx --from latex --to docx \
   --resource-path=. --extract-media=./media \
-  --number-sections --citeproc --bibliography=references.bib
+  --number-sections --citeproc --bibliography=references.bib --csl=numeric.csl
 ```
+
+Without `--csl=numeric.csl`, `--citeproc` renders `(Author et al. Year)`, which
+`word_guard.py` fails as a forbidden author-year citation. With it, in-text
+citations render as linked `[1]` numbers and the reference list is numbered to
+match. After conversion, confirm the .docx body actually shows `[n]` citations
+(not just a reference list) — an empty-citation body means the source used a
+`thebibliography` block instead of `\bibliography{references}`.
 
 Flatten `\input`/`\include` with `latexpand` first. Expand or remove
 `\newcommand` macros. Verify tables, citations, figures after conversion.
