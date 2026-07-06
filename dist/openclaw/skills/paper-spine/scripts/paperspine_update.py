@@ -22,10 +22,11 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_MANIFEST_URL = (
-    "https://raw.githubusercontent.com/WUBING2023/PaperSpine/main/dist/paperspine_version.json"
+    "https://raw.githubusercontent.com/jwestraadt/PaperSpine/main/dist/paperspine_version.json"
 )
-# Stage 5a: archive_url points to a fixed tag so users never pull in-flight main.
-DEFAULT_ARCHIVE_URL = "https://github.com/WUBING2023/PaperSpine/archive/refs/tags/v4.0.0.zip"
+# Fallback mirrors the canonical manifest's archive_url (main branch); a fixed
+# tag would silently go stale on every version bump.
+DEFAULT_ARCHIVE_URL = "https://github.com/jwestraadt/PaperSpine/archive/refs/heads/main.zip"
 CONFIG_HOME_ENV = "PAPERSPINE_CONFIG_HOME"
 VERSION_FILE = "paperspine_version.json"
 INSTALL_STATE_FILE = "install_state.json"

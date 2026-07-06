@@ -3,8 +3,8 @@
   "name": "paperspine-marketplace",
   "description": "Marketplace manifest for the PaperSpine Claude Code plugin.",
   "owner": {
-    "name": "WUBING2023",
-    "url": "https://github.com/WUBING2023"
+    "name": "jwestraadt",
+    "url": "https://github.com/jwestraadt"
   },
   "plugins": [
     {
@@ -13,7 +13,7 @@
       "source": "./",
       "version": "4.0.0",
       "category": "writing",
-      "homepage": "https://github.com/WUBING2023/PaperSpine",
+      "homepage": "https://github.com/jwestraadt/PaperSpine",
       "skills": [
         "./dist/claude/skills/paper-spine"
       ]

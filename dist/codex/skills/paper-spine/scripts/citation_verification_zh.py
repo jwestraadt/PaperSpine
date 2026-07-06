@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _paper_spine_utils import table_rows
 
-USER_AGENT = "PaperSpine/3.0 (citation-zh; https://github.com/WUBING2023/PaperSpine)"
+USER_AGENT = "PaperSpine/4.0 (citation-zh; https://github.com/jwestraadt/PaperSpine)"
 DOI_RE = re.compile(r"(?:doi\s*[:=]\s*|https?://doi\.org/)?(10\.\d{4,}/[^\s,;)]+)", re.IGNORECASE)
 
 # Chinese citation format patterns

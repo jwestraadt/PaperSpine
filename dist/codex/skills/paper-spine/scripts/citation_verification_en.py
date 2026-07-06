@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 CROSSREF_QUERY_URL = "https://api.crossref.org/works"
-USER_AGENT = "PaperSpine/1.0 (mailto:paperspine@example.com)"
+USER_AGENT = "PaperSpine/4.0 (citation-en; https://github.com/jwestraadt/PaperSpine)"
 
 # Title similarity threshold for a "matched" verdict
 MIN_TITLE_SIMILARITY = 0.6

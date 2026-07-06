@@ -39,7 +39,7 @@ ARXIV_RE = re.compile(r"\barxiv\s*:?\s*(\d{4}\.\d{4,5}(?:v\d+)?)\b", re.IGNORECA
 URL_RE = re.compile(r"https?://[^\s)\]]+", re.IGNORECASE)
 CROSSREF_URL = "https://api.crossref.org/works/"
 SEMANTIC_SCHOLAR_URL = "https://api.semanticscholar.org/graph/v1/paper/DOI:"
-USER_AGENT = "PaperSpine/3.0 (citation-quality; https://github.com/WUBING2023/PaperSpine)"
+USER_AGENT = "PaperSpine/4.0 (citation-quality; https://github.com/jwestraadt/PaperSpine)"
 VALID_VERIFICATION_VALUES = {"yes", "verified", "pass", "true"}
 EXTERNAL_CHANNEL_TOKENS = (
     "web",

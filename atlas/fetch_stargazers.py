@@ -10,7 +10,7 @@ if not TOKEN:
         TOKEN = open(tf, encoding="utf-8").read().strip()
 if not TOKEN:
     sys.exit("no GITHUB_TOKEN env var and no token.txt")
-REPO = "WUBING2023/PaperSpine"
+REPO = "jwestraadt/PaperSpine"
 OUT = os.path.join(HERE, "stargazers_raw.json")
 LOG = os.path.join(HERE, "fetch_progress.txt")
 
