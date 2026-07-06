@@ -143,9 +143,9 @@ class StructuredReviewTests(unittest.TestCase):
             text_a = "The methods section is well described. The contribution is clearly stated. " * 20
             text_b = "The methods section is well described. The contribution is clearly stated. " * 20  # nearly identical
             text_c = "The paper structure is logical and clear. Transitions are smooth throughout. " * 20
-            (review_dir / "methods_reviewer.md").write_text(text_a, encoding="utf-8")
-            (review_dir / "contribution_reviewer.md").write_text(text_b, encoding="utf-8")
-            (review_dir / "clarity_reviewer.md").write_text(text_c, encoding="utf-8")
+            (review_dir / "methods_review_output.md").write_text(text_a, encoding="utf-8")
+            (review_dir / "contribution_review_output.md").write_text(text_b, encoding="utf-8")
+            (review_dir / "clarity_review_output.md").write_text(text_c, encoding="utf-8")
             from structured_review import validate_independence
             result = validate_independence(review_dir)
             self.assertFalse(result["ok"])  # should detect high similarity between a and b
@@ -155,19 +155,102 @@ class StructuredReviewTests(unittest.TestCase):
             shutil.rmtree(review_dir, ignore_errors=True)
 
     def test_validate_independence_clean(self) -> None:
+        # Regression: genuine, distinct reviews naturally use the words
+        # "methods", "contribution", and "clarity" — that alone must not be
+        # reported as cross-contamination, and distinct outputs must PASS.
         fd, name = tempfile.mkstemp()
         os.close(fd)
         review_dir = Path(name)
         review_dir.unlink(missing_ok=True)
         review_dir.mkdir()
         try:
-            (review_dir / "methods_reviewer.md").write_text("Methods analysis. " * 30, encoding="utf-8")
-            (review_dir / "contribution_reviewer.md").write_text("Contribution analysis. " * 30, encoding="utf-8")
-            (review_dir / "clarity_reviewer.md").write_text("Clarity analysis. " * 30, encoding="utf-8")
+            (review_dir / "methods_review_output.md").write_text(
+                "The methods section describes the pipeline in enough detail to "
+                "replicate the experiments, and each ablation isolates one design "
+                "choice. The preprocessing steps, however, deserve more clarity "
+                "and the compute budget is unreported.",
+                encoding="utf-8",
+            )
+            (review_dir / "contribution_review_output.md").write_text(
+                "The stated contribution is novel relative to the cited "
+                "baselines, and the evidence supports the central claim. The "
+                "comparison against prior methods could be broadened to include "
+                "stronger recent systems.",
+                encoding="utf-8",
+            )
+            (review_dir / "clarity_review_output.md").write_text(
+                "The overall structure flows logically from motivation to "
+                "results, but several transitions are abrupt and figure captions "
+                "are terse. A roadmap paragraph would help readers track the "
+                "argument through the middle sections.",
+                encoding="utf-8",
+            )
             from structured_review import validate_independence
             result = validate_independence(review_dir)
-            # Different texts should pass independence check
+            self.assertTrue(result["ok"], result["findings"])
             self.assertTrue(result["independence_score"] > 0.5)
+        finally:
+            import shutil
+            shutil.rmtree(review_dir, ignore_errors=True)
+
+    def test_validate_independence_requires_agent_outputs(self) -> None:
+        # Regression: validation used to read the *_reviewer.md PROMPT
+        # templates (which all embed the same manuscript and always look
+        # dependent) instead of the *_review_output.md files the dispatched
+        # agents actually write. Prompts alone must not satisfy validation.
+        fd, name = tempfile.mkstemp()
+        os.close(fd)
+        review_dir = Path(name)
+        review_dir.unlink(missing_ok=True)
+        review_dir.mkdir()
+        try:
+            for prompt in ("methods_reviewer.md", "contribution_reviewer.md",
+                           "clarity_reviewer.md"):
+                (review_dir / prompt).write_text(
+                    "# Prompt\n\n## Manuscript Sections\n\nshared text\n",
+                    encoding="utf-8",
+                )
+            from structured_review import validate_independence
+            result = validate_independence(review_dir)
+            self.assertFalse(result["ok"])
+            self.assertTrue(
+                any("methods_review_output.md" in f for f in result["findings"]),
+                result["findings"],
+            )
+        finally:
+            import shutil
+            shutil.rmtree(review_dir, ignore_errors=True)
+
+    def test_validate_independence_flags_explicit_cross_reference(self) -> None:
+        fd, name = tempfile.mkstemp()
+        os.close(fd)
+        review_dir = Path(name)
+        review_dir.unlink(missing_ok=True)
+        review_dir.mkdir()
+        try:
+            (review_dir / "methods_review_output.md").write_text(
+                "The experimental design is rigorous and each baseline is "
+                "trained under an identical budget with tuned hyperparameters.",
+                encoding="utf-8",
+            )
+            (review_dir / "contribution_review_output.md").write_text(
+                "The novelty is incremental but well argued, and the empirical "
+                "gains are consistent across all three evaluation datasets.",
+                encoding="utf-8",
+            )
+            (review_dir / "clarity_review_output.md").write_text(
+                "As the methods reviewer also noted, the protocol description "
+                "is thin. Otherwise the narrative reads smoothly end to end.",
+                encoding="utf-8",
+            )
+            from structured_review import validate_independence
+            result = validate_independence(review_dir)
+            self.assertFalse(result["ok"])
+            self.assertTrue(
+                any("Cross-contamination" in f and "clarity_review_output.md" in f
+                    for f in result["findings"]),
+                result["findings"],
+            )
         finally:
             import shutil
             shutil.rmtree(review_dir, ignore_errors=True)

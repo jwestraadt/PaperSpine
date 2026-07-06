@@ -441,12 +441,26 @@ def validate_independence(review_dir: Path) -> dict:
     if not review_dir.is_dir():
         return {"ok": False, "findings": ["Not a directory"], "independence_score": 0}
 
-    roles = ["methods_reviewer.md", "contribution_reviewer.md", "clarity_reviewer.md"]
+    # Validate the review OUTPUTS the dispatched agents write (per dispatch.md),
+    # NOT the *_reviewer.md prompt templates dispatch_review generates — those
+    # all embed the same manuscript text and would always score as dependent.
+    roles = [
+        "methods_review_output.md",
+        "contribution_review_output.md",
+        "clarity_review_output.md",
+    ]
     texts: dict[str, str] = {}
     for role_file in roles:
         path = review_dir / role_file
         if not path.exists():
-            return {"ok": False, "findings": [f"Missing: {role_file}"], "independence_score": 0}
+            return {
+                "ok": False,
+                "findings": [
+                    f"Missing: {role_file} — each dispatched agent must write "
+                    f"its *_review_output.md before validation."
+                ],
+                "independence_score": 0,
+            }
         texts[role_file] = path.read_text(encoding="utf-8", errors="ignore")
 
     findings: list[str] = []
@@ -464,13 +478,18 @@ def validate_independence(review_dir: Path) -> dict:
                 f"High similarity suggests these reviews were not written independently."
             )
 
-    # Check for cross-reference contamination
-    role_names = [r.replace("_reviewer.md", "") for r in roles]
+    # Check for cross-reference contamination: only flag explicit mentions of
+    # another ROLE'S review ("methods reviewer", "clarity review"). Bare words
+    # like "methods" or "contribution" are ordinary review vocabulary that
+    # appears in virtually every genuine review and must not trip this check.
+    role_names = [r.replace("_review_output.md", "") for r in roles]
     for i, role_file in enumerate(roles):
         other_names = [n for j, n in enumerate(role_names) if j != i]
         for other in other_names:
-            if other in texts[role_file]:
-                findings.append(f"Cross-contamination: {role_file} references '{other}' review")
+            if re.search(rf"\b{other}[\s_-]+review(er)?\b", texts[role_file], re.IGNORECASE):
+                findings.append(
+                    f"Cross-contamination: {role_file} references the '{other}' review"
+                )
 
     avg_sim = sum(scores) / len(scores) if scores else 0
     return {
