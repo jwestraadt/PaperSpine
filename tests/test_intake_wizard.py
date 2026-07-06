@@ -353,6 +353,51 @@ class ConsoleSetupTests(unittest.TestCase):
         finally:
             wizard._ANSI_ENABLED = original
 
+    def test_read_key_unix_decodes_arrow_without_crashing(self) -> None:
+        # Regression: the POSIX key reader indexed attrs[5] (ospeed, an int)
+        # instead of attrs[6] (the cc list) when arming a non-blocking read
+        # for the ESC sequence, so every arrow/ESC key raised TypeError and
+        # crashed the wizard. Inject fake termios/tty so the path runs on any
+        # platform, feeding the "up arrow" sequence ESC [ A.
+        import types
+
+        wizard = self._import()
+
+        fake_termios = types.ModuleType("termios")
+        fake_termios.TCSANOW = 0
+        fake_termios.VMIN = 6
+        fake_termios.VTIME = 5
+        # tcgetattr returns [iflag, oflag, cflag, lflag, ispeed, ospeed, cc];
+        # index 5 (ospeed) is an int, index 6 (cc) is a mutable list.
+        fake_termios.tcgetattr = lambda fd: [0, 0, 0, 0, 9600, 9600, [0] * 32]
+        fake_termios.tcsetattr = lambda fd, when, attrs: None
+        fake_tty = types.ModuleType("tty")
+        fake_tty.setraw = lambda fd: None
+
+        chars = iter("\x1b[A")
+
+        class _FakeStdin:
+            def fileno(self) -> int:
+                return 0
+
+            def read(self, n: int) -> str:
+                return next(chars, "")
+
+        old_modules = {k: sys.modules.get(k) for k in ("termios", "tty")}
+        old_stdin = wizard.sys.stdin
+        sys.modules["termios"] = fake_termios
+        sys.modules["tty"] = fake_tty
+        wizard.sys.stdin = _FakeStdin()
+        try:
+            self.assertEqual(wizard._read_key_unix(), "up")
+        finally:
+            wizard.sys.stdin = old_stdin
+            for k, v in old_modules.items():
+                if v is None:
+                    sys.modules.pop(k, None)
+                else:
+                    sys.modules[k] = v
+
 
 if __name__ == "__main__":
     unittest.main()

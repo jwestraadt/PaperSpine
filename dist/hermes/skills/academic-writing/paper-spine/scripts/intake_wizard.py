@@ -490,8 +490,11 @@ def _read_key_unix() -> str:
             old_blocking = termios.tcgetattr(fd)
             try:
                 attrs = termios.tcgetattr(fd)
-                attrs[5][termios.VMIN] = 0
-                attrs[5][termios.VTIME] = 1
+                # tcgetattr returns [iflag, oflag, cflag, lflag, ispeed,
+                # ospeed, cc]; the control-character list is index 6, not 5
+                # (index 5 is ospeed, an int — indexing it raises TypeError).
+                attrs[6][termios.VMIN] = 0
+                attrs[6][termios.VTIME] = 1
                 termios.tcsetattr(fd, termios.TCSANOW, attrs)
                 nxt = sys.stdin.read(1)
             finally:
