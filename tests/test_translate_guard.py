@@ -147,6 +147,24 @@ class TranslateGuardTests(unittest.TestCase):
         findings = check_manifest(trans, {"workflow": "rewrite_existing"})
         self.assertTrue(any(f.severity == "BLOCKER" for f in findings))
 
+    def test_check_manifest_status_legend_not_blocked(self) -> None:
+        # Regression: MANIFEST-003 fired whenever the text merely contained
+        # "missing"/"partial", even in a status legend listing the possible
+        # values — blocking a genuinely complete manifest.
+        out, trans = _make_fixture(
+            **{
+                "paper_spine_config.json": '{"workflow": "rewrite_existing"}',
+                "translation_zh/manifest.md": (
+                    "# Manifest\n\n"
+                    "Status legend: translated / missing / partial\n\n"
+                    "| File | Status |\n|---|---|\n"
+                    "| abstract.md | translated |\n"
+                ),
+            }
+        )
+        findings = check_manifest(trans, {"workflow": "rewrite_existing"})
+        self.assertFalse(any(f.id == "MANIFEST-003" for f in findings))
+
     def test_to_markdown_includes_status(self) -> None:
         report = TranslationGuardReport("test", "rewrite_existing", [
             TranslationFinding("T-001", "BLOCKER", "what", "fix", "teaching"),

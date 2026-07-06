@@ -241,10 +241,16 @@ def check_citation_format(text: str) -> list[Finding]:
         return findings
     body = text[doc_start:]
 
-    # Remove math mode spans so we don't flag brackets inside math.
-    body_no_math = re.sub(r"\$\$.*?\$\$", " ", body, flags=re.DOTALL)
-    body_no_math = re.sub(r"\\\[.*?\\\]", " ", body_no_math, flags=re.DOTALL)
-    body_no_math = re.sub(r"\$[^$]*?\$", " ", body_no_math)
+    # Blank out math-mode spans so we don't flag brackets inside math, but
+    # preserve the length and newlines of each span so match offsets still map
+    # back to the original text — otherwise a multi-line $$...$$ before a
+    # flagged citation shifts every reported line number.
+    def _blank(match: re.Match[str]) -> str:
+        return re.sub(r"[^\n]", " ", match.group(0))
+
+    body_no_math = re.sub(r"\$\$.*?\$\$", _blank, body, flags=re.DOTALL)
+    body_no_math = re.sub(r"\\\[.*?\\\]", _blank, body_no_math, flags=re.DOTALL)
+    body_no_math = re.sub(r"\$[^$]*?\$", _blank, body_no_math)
 
     # Find parenthesized bracket citations: ([15]), ([3,12]).
     # Plain [1] / [3,12,13] is the required style.

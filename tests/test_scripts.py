@@ -157,6 +157,32 @@ This cites work [9] beyond the list.
             self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
             self.assertIn("exceeds the applied-paper budget", result.stdout)
 
+    def test_section_economy_counts_optional_arg_and_nested_brace_titles(self) -> None:
+        # Regression: the section regex missed \section[Short]{Title} and titles
+        # with a nested brace group (\textsc{...}), so an over-budget paper
+        # could slip past the hard gate with those sections uncounted.
+        with tempfile.TemporaryDirectory() as tmp:
+            titles = [
+                r"\section{Introduction}",
+                r"\section[Short]{Related Work}",
+                r"\section{Results on \textsc{ImageNet}}",
+                r"\section{Method}",
+                r"\section[M2]{More Method}",
+                r"\section{Experiments}",
+                r"\section{Discussion}",
+                r"\section{Conclusion}",
+            ]
+            body = "\n".join(t + "\nBody text. " + ("content " * 40) for t in titles)
+            tex = Path(tmp) / "hidden.tex"
+            tex.write_text(
+                "\\documentclass{article}\n\\title{Hidden}\n\\begin{document}\n\\maketitle\n"
+                + body + "\n\\end{document}\n",
+                encoding="utf-8",
+            )
+            result = run_script("src/scripts/section_economy_check.py", str(tex), "--markdown")
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            self.assertIn("exceeds the applied-paper budget", result.stdout)
+
     def test_section_economy_passes_within_budget(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             body = "\n".join(

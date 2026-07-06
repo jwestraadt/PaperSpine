@@ -411,8 +411,13 @@ def check_manifest(trans_dir: Path, config: dict) -> list[TranslationFinding]:
                     "Missing entries mean the manifest is out of sync with the file system.",
         ))
 
-    # Check manifest flags partial/missing
-    if re.search(r"(missing|partial|not translated|缺失|未翻译|部分翻译)", manifest_text, re.IGNORECASE):
+    # Check manifest flags partial/missing — but only a genuine per-file gap,
+    # not a status legend that merely lists the possible values (e.g.
+    # "Status: translated / missing / partial"). Skip any line that enumerates
+    # the legend (mentions 'translated'/'已翻译' alongside a separator).
+    gap_re = re.compile(r"(missing|partial|not translated|缺失|未翻译|部分翻译)", re.IGNORECASE)
+    legend_re = re.compile(r"(translated|已翻译).*[/、,，]|[/、,，].*(translated|已翻译)", re.IGNORECASE)
+    if any(gap_re.search(line) and not legend_re.search(line) for line in manifest_text.splitlines()):
         findings.append(TranslationFinding(
             id="MANIFEST-003", severity="BLOCKER",
             what="Manifest reports files as missing or partially translated",

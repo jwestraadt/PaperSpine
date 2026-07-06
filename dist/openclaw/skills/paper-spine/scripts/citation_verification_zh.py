@@ -22,7 +22,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _paper_spine_utils import table_rows
 
 USER_AGENT = "PaperSpine/4.0 (citation-zh; https://github.com/jwestraadt/PaperSpine)"
-DOI_RE = re.compile(r"(?:doi\s*[:=]\s*|https?://doi\.org/)?(10\.\d{4,}/[^\s,;)]+)", re.IGNORECASE)
+# Exclude full-width CJK punctuation (U+3000-U+303F and U+FF00-U+FFEF) from the
+# DOI body: a reference ending "doi:10.1000/xyz。" must not swallow the trailing
+# 。 into the DOI, which would then fail to resolve and yield a false SUSPICIOUS.
+DOI_RE = re.compile(
+    r"(?:doi\s*[:=]\s*|https?://doi\.org/)?(10\.\d{4,}/[^\s,;)　-〿＀-￯]+)",
+    re.IGNORECASE,
+)
 
 # Chinese citation format patterns
 CN_AUTHOR_RE = re.compile(r"[^\x00-\x7f]{2,4}(?:[,，、\s]+[^\x00-\x7f]{2,4})*")  # Chinese author names

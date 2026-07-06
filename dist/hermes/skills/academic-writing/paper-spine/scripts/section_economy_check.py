@@ -61,7 +61,16 @@ def numbered_sections(text: str) -> list[tuple[str, str]]:
     cut = re.search(r"\\begin\{thebibliography\}|\\bibliography\b|\\end\{document\}", body)
     region = body[: cut.start()] if cut else body
 
-    matches = list(re.finditer(r"\\section(\*)?\s*\{([^{}]*)\}", region))
+    # Allow an optional [short title] argument and one level of nested braces
+    # in the title (e.g. \section[Short]{Title} or \section{Results on
+    # \textsc{ImageNet}}); otherwise those sections are silently uncounted and
+    # an over-budget manuscript can slip past the hard gate.
+    matches = list(
+        re.finditer(
+            r"\\section(\*)?\s*(?:\[[^\]]*\])?\s*\{((?:[^{}]|\{[^{}]*\})*)\}",
+            region,
+        )
+    )
     sections: list[tuple[str, str]] = []
     for index, match in enumerate(matches):
         if match.group(1):  # starred section: abstract/keywords/acknowledgements

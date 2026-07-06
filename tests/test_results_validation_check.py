@@ -64,6 +64,25 @@ class ResultsValidationCheckTests(unittest.TestCase):
         self.assertIn("Status: FAIL", res.stdout)
         self.assertIn("Contribution Claim Tested", res.stdout)
 
+    def test_evidence_column_titled_result_is_resolved(self) -> None:
+        # Regression: the bare "result" term substring-matched the "Results
+        # Unit" header, so an evidence column titled just "Result" bound to the
+        # unit column (index 0) and empty Result cells silently passed.
+        header = (
+            "| Results Unit | Contribution Claim Tested | Result | Figure/Table "
+            "| Confirmatory Condition | Allowed Interpretation "
+            "| Interpretation NOT Allowed |\n"
+            "|---|---|---|---|---|---|---|\n"
+        )
+        empty_evidence_row = (
+            "| 4.1 Accuracy | C1: beats SOTA |  | Table 2 | matched budget "
+            "| Improves accuracy on X | Do NOT claim general superiority |\n"
+        )
+        out = _write_results("# Results Validation\n\n" + header + empty_evidence_row)
+        res = _run(out)
+        self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
+        self.assertIn("Status: FAIL", res.stdout)
+
     def test_missing_file_fails(self) -> None:
         out = _write_results(None)
         res = _run(out)

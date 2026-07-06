@@ -56,7 +56,14 @@ def _find_column(header: list[str], terms: tuple[str, ...]) -> int:
     Terms are tried in order so that a more specific term (e.g. the full
     `contribution claim tested`) wins before a looser one (`contribution`).
     """
-    lowered = [cell.lower() for cell in header]
+    lowered = [cell.strip().lower() for cell in header]
+    # Prefer an exact header match first, so a column titled exactly "Result"
+    # is picked over "Results Unit" via the substring "result" (the bare
+    # "result" term otherwise mis-binds the evidence column to the unit column).
+    for term in terms:
+        for index, cell in enumerate(lowered):
+            if cell == term:
+                return index
     for term in terms:
         for index, cell in enumerate(lowered):
             if term in cell:
