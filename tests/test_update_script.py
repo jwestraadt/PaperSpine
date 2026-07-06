@@ -45,7 +45,7 @@ def create_repo(root: Path, version: str, *, broken: bool = False) -> Path:
     (root / "install.ps1").write_text("# installer\n", encoding="utf-8")
     (root / "install.sh").write_text("#!/bin/bash\n# installer\n", encoding="utf-8")
     (root / "README.md").write_text("# PaperSpine\n", encoding="utf-8")
-    (root / "README.en.md").write_text("# PaperSpine\n", encoding="utf-8")
+    (root / "README.zh.md").write_text("# PaperSpine\n", encoding="utf-8")
 
     # Claude slash-command and Codex prompt entry points.
     (root / "dist" / "claude" / "commands").mkdir(parents=True)
@@ -267,7 +267,7 @@ class ValidateRepoTests(unittest.TestCase):
         updater = self._import_updater()
         with tempfile.TemporaryDirectory() as tmp:
             root = create_repo(Path(tmp) / "PaperSpine-main", "9.9.9")
-            (root / "README.en.md").unlink()
+            (root / "README.zh.md").unlink()
             (root / "install.ps1").unlink()
             manifest = updater.validate_repo(root)
             self.assertEqual(manifest["version"], "9.9.9")

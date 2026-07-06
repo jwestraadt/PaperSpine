@@ -1033,13 +1033,13 @@ def main() -> int:
         print(f"Matrix not found: {matrix_path}", file=sys.stderr)
         return 2
 
-    lang = "zh"
+    lang = "en"
     humanize_tier = "medium"
     config_path = out_dir / "paper_spine_config.json"
     if config_path.exists():
         try:
             config = json.loads(config_path.read_text(encoding="utf-8"))
-            lang = config.get("output_language", "zh")
+            lang = config.get("output_language", "en")
             humanize_tier = config.get("humanize_tier", "medium")
             if humanize_tier not in ("none", "light", "medium", "heavy"):
                 humanize_tier = "medium"

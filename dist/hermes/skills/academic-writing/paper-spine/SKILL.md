@@ -92,6 +92,11 @@ complete while any of them fails.
 
 ## User-Facing Language
 
+**English is the default.** Unless one of the Chinese triggers below is present,
+conduct the entire run — progress updates, status bullets, gate notes, the final
+report, and the manuscript output — in English. Chinese is an explicit opt-in,
+never assumed.
+
 When the user writes in Chinese, `ui_language=zh`, `output_language=zh`, or
 `translation_package=zh`, all user-facing communication must be in Chinese
 throughout the whole run, not only in the final completion report. This includes

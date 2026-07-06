@@ -18,7 +18,7 @@ Collect workflow options and write validated configuration before any substantiv
 | `workflow` | `rewrite_existing`, `build_from_materials` | — |
 | `scene` | `journal`, `conference`, `report_review`, `competition` | — |
 | `tier` | `flash`, `pro` | `flash` |
-| `output_language` | `en`, `zh` | `en` for journal/conference; `zh` for Chinese requests |
+| `output_language` | `en`, `zh` | `en` (default for every scene); `zh` only on an explicit Chinese request |
 | `target_name` | free text | — |
 | `materials_dir` | path or empty | — |
 | `draft_path` | path or empty | — |

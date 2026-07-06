@@ -9,7 +9,7 @@ Ask these fields in order:
 1. Workflow: `rewrite_existing` or `build_from_materials`.
 2. Scene: `journal`, `conference`, `report_review`, or `competition`.
 3. Tier: `flash` or `pro`.
-4. Output language: `en` or `zh`.
+4. Output language: `en` (default) or `zh`.
 5. Target name: journal, conference, course, report type, or competition name.
 6. Draft path for `rewrite_existing`, or materials directory for
    `build_from_materials`.

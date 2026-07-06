@@ -15,9 +15,9 @@ def isolated_env(output_dir: Path) -> dict[str, str]:
     """Env that never reads the developer's real ~/.paperspine/config.json.
 
     Without PAPERSPINE_CONFIG_HOME the wizard falls back to Path.home(), so a
-    real global config with ui_language 'en' would flip the default UI away
-    from the zh these tests assert. Pin it to an isolated dir under the temp
-    output so the deterministic default (zh) is used.
+    real global config with ui_language 'zh' would flip the default UI away
+    from the 'en' these tests assert. Pin it to an isolated dir under the temp
+    output so the deterministic default (en) is used.
     """
     env = os.environ.copy()
     env["PYTHONUTF8"] = "1"
@@ -84,7 +84,7 @@ class IntakeWizardTests(unittest.TestCase):
             self.assertEqual(data["workflow"], "build_from_materials")
             self.assertEqual(data["scene"], "report_review")
             self.assertEqual(data["tier"], "pro")
-            self.assertEqual(data["output_language"], "zh")
+            self.assertEqual(data["output_language"], "en")
             self.assertEqual(data["target_name"], "Course Report")
             self.assertEqual(data["materials_dir"], "materials")
             self.assertEqual(data["official_urls"], ["https://example.org/rubric"])
@@ -245,9 +245,10 @@ class IntakeWizardTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
             self.assertIn("PaperSpine", result.stdout)
             self.assertIn("Welcome back!", result.stdout)
-            self.assertIn("先学习目标场景", result.stdout)
-            self.assertIn("工作流", result.stdout)
-            self.assertIn("检查配置", result.stdout)
+            # English is the default UI language.
+            self.assertIn("Learn the target scene", result.stdout)
+            self.assertIn("Workflow", result.stdout)
+            self.assertIn("Review configuration", result.stdout)
             self.assertIn("translation_package: zh", result.stdout)
             data = json.loads((output_dir / "paper_spine_config.json").read_text(encoding="utf-8"))
             self.assertEqual(data["translation_package"], "zh")
@@ -308,13 +309,43 @@ class IntakeWizardTests(unittest.TestCase):
             )
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         self.assertIn("PaperSpine", result.stdout)
+        # English is the default UI language.
+        self.assertIn("Configuration Wizard", result.stdout)
+        self.assertIn("Workflow", result.stdout)
+        self.assertIn("Current value", result.stdout)
+        self.assertIn("Use Up/Down for fields", result.stdout)
+
+    def test_chinese_ui_renders_when_opted_in(self) -> None:
+        # Chinese is no longer the default but must still work when explicitly
+        # requested via --ui-language zh (or a saved global config).
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "src/scripts/intake_wizard.py",
+                    "--preview-keyboard-frame",
+                    "--preview-width", "118",
+                    "--ui-language", "zh",
+                    "--workflow", "build_from_materials",
+                    "--scene", "competition",
+                    "--tier", "pro",
+                ],
+                cwd=ROOT,
+                env=isolated_env(Path(tmp)),
+                text=True,
+                encoding="utf-8",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         self.assertIn("配置向导", result.stdout)
         self.assertIn("工作流", result.stdout)
         self.assertIn("当前值", result.stdout)
         self.assertIn("上下切换字段", result.stdout)
+        # No mojibake in the Chinese frame.
         self.assertNotIn("锟", result.stdout)
         self.assertNotIn("鐩", result.stdout)
-        self.assertNotIn("鍏", result.stdout)
 
     def test_preview_frame_has_no_raw_ansi_escapes(self) -> None:
         # color=False preview must not leak escape codes (legacy-console safety).

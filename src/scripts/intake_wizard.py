@@ -26,7 +26,7 @@ WORKFLOWS = ("rewrite_existing", "build_from_materials")
 SCENES = ("journal", "conference", "report_review", "competition")
 TIERS = ("flash", "pro")
 LANGUAGES = ("en", "zh")
-UI_LANGUAGES = ("zh", "en")
+UI_LANGUAGES = ("en", "zh")
 WORD_OUTPUTS = ("none", "docx")
 TRANSLATION_PACKAGES = ("none", "zh")
 REFERENCE_MODES = ("local_first", "specified_paths", "web")
@@ -303,7 +303,7 @@ def save_global_config(data: dict[str, str]) -> None:
 
 
 def tr(ui_language: str, key: str) -> str:
-    return LABELS.get(ui_language, LABELS["zh"]).get(key, key)
+    return LABELS.get(ui_language, LABELS["en"]).get(key, key)
 
 
 _ANSI_ENABLED = True
@@ -643,9 +643,9 @@ def split_items(value: str) -> list[str]:
 
 
 def default_language(scene: str) -> str:
-    if scene in {"journal", "conference"}:
-        return "en"
-    return "zh"
+    # English is the default output language for every scene. Chinese is an
+    # explicit opt-in via --output-language zh or the interactive picker.
+    return "en"
 
 
 def display_config(config: PaperSpineConfig) -> list[str]:
@@ -1084,7 +1084,7 @@ def base_config_from_args(args: argparse.Namespace, ui_language: str) -> PaperSp
 
 def build_config(args: argparse.Namespace) -> PaperSpineConfig:
     global_config = load_global_config()
-    ui_language = args.ui_language or global_config.get("ui_language", "zh")
+    ui_language = args.ui_language or global_config.get("ui_language", "en")
     use_keyboard = (
         not args.classic_input
         and not args.no_interactive
@@ -1178,7 +1178,7 @@ def main() -> int:
     configure_windows_console()
     args = parse_args()
     if args.preview_keyboard_frame:
-        ui_language = args.ui_language or load_global_config().get("ui_language", "zh")
+        ui_language = args.ui_language or load_global_config().get("ui_language", "en")
         config = base_config_from_args(args, ui_language)
         auto_config_project(config, args)
         print("\n".join(render_keyboard_frame(config, index=0, width=args.preview_width, color=False)))

@@ -20,7 +20,7 @@ class SkillStructureTests(unittest.TestCase):
     def test_required_project_files_exist(self) -> None:
         required = [
             "README.md",
-            "README.en.md",
+            "README.zh.md",
             "LICENSE",
             ".gitignore",
             "install.ps1",
@@ -121,12 +121,13 @@ class SkillStructureTests(unittest.TestCase):
         self.assertEqual(offenders, [])
 
     def test_readme_language_switch_and_content_parity(self) -> None:
-        english = (ROOT / "README.en.md").read_text(encoding="utf-8")
-        chinese = (ROOT / "README.md").read_text(encoding="utf-8")
+        # English is the default README (README.md); Chinese lives in README.zh.md.
+        english = (ROOT / "README.md").read_text(encoding="utf-8")
+        chinese = (ROOT / "README.zh.md").read_text(encoding="utf-8")
 
         for text in (english, chinese):
-            self.assertIn("[English](README.en.md)", text)
-            self.assertIn("[中文](README.md)", text)
+            self.assertIn("[English](README.md)", text)
+            self.assertIn("[中文](README.zh.md)", text)
             for fragment in [
                 "dist/codex/skills",
                 "dist/claude/skills",

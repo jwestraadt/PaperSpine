@@ -74,5 +74,7 @@ python -m pytest tests          # expect 216+ passed
 ruff check src/scripts tests
 ```
 
-Do not push to GitHub unless explicitly asked. Keep `README.md` (Chinese) and
-`README.en.md` (English) content-equivalent.
+Do not push to GitHub unless explicitly asked. English is the default language
+everywhere (README, interactive CLI, config defaults); Chinese is an explicit
+opt-in. Keep `README.md` (English, the default) and `README.zh.md` (Chinese)
+content-equivalent.

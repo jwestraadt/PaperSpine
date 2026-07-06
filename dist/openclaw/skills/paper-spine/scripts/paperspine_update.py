@@ -269,7 +269,7 @@ def validate_repo(root: Path) -> dict[str, Any]:
 
     # Optional: docs + root installers. These churn across versions, so a
     # missing one must never abort an upgrade — warn and continue.
-    optional: list[str] = ["install.ps1", "install.sh", "README.md", "README.en.md"]
+    optional: list[str] = ["install.ps1", "install.sh", "README.md", "README.zh.md"]
 
     missing_core = [rel for rel in core if not (root / rel).exists()]
     if missing_core:
