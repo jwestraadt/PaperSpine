@@ -2,7 +2,9 @@
 
 [English](README.en.md) | [中文](README.md)
 
-[**PaperSpine 使用讲解视频（Bilibili）**](https://www.bilibili.com/video/BV1rjVa6ZEYu)
+[**PaperSpine walkthrough video (Bilibili)**](https://www.bilibili.com/video/BV1rjVa6ZEYu)
+
+Voice-over contribution: [https://github.com/YiShanZheng](https://github.com/YiShanZheng)
 
 [**🌍 Stargazer Atlas · see which universities and cities use PaperSpine**](https://wubing2023.github.io/PaperSpine/)
 

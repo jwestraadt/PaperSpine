@@ -31,7 +31,8 @@ def run_guard(docx_path: Path, min_chars: int = 50) -> subprocess.CompletedProce
     return subprocess.run(
         [sys.executable, "src/scripts/word_guard.py", str(docx_path),
          "--markdown", "--min-chars", str(min_chars)],
-        cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+        cwd=ROOT, text=True, encoding="utf-8", errors="replace",
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
     )
 
 
@@ -295,7 +296,8 @@ class WordGuardTests(unittest.TestCase):
             make_docx(docx, ["Title paragraph with enough text to check. " * 20])
             res = subprocess.run(
                 [sys.executable, "src/scripts/word_guard.py", str(docx), "--fix-fonts", "--language", "en"],
-                cwd=ROOT, text=True, capture_output=True, check=False,
+                cwd=ROOT, text=True, encoding="utf-8", errors="replace",
+                capture_output=True, check=False,
             )
             self.assertNotIn("WinError 17", res.stdout + res.stderr)
             self.assertNotIn("Traceback", res.stdout + res.stderr)
@@ -338,7 +340,8 @@ class WordGuardTests(unittest.TestCase):
             result = subprocess.run(
                 [sys.executable, "src/scripts/word_guard.py", str(docx),
                  "--tex", str(tex), "--language", "en", "--markdown", "--min-chars", "50"],
-                cwd=ROOT, text=True, capture_output=True, check=False,
+                cwd=ROOT, text=True, encoding="utf-8", errors="replace",
+                capture_output=True, check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
             self.assertNotIn("not found in first 5 paragraphs", result.stdout)

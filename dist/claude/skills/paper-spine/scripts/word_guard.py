@@ -8,11 +8,17 @@ import json
 import os
 import re
 import shutil
+import sys
 import tempfile
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from xml.etree import ElementTree
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 PLACEHOLDER_PATTERNS = (
     r"\bTODO\b",

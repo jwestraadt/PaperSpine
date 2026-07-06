@@ -173,7 +173,7 @@ class SkillStructureTests(unittest.TestCase):
                 continue
             if path.name in ("CLAUDE.md", "AGENTS.md"):
                 continue
-            if ".git" in path.parts:
+            if ".git" in path.parts or ".venv" in path.parts:
                 continue
             if "paper_rewriting_output" in path.parts:
                 continue

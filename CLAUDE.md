@@ -44,7 +44,7 @@ longer separate worker skills.
 - `dist/openclaw/skills/paper-spine`
 - `dist/hermes/skills/academic-writing/paper-spine`
 
-Install entry points: `python install.ps1` (Windows) / `bash install.sh`
+Install entry points: `.\install.ps1` (Windows) / `bash install.sh`
 (macOS/Linux) — thin wrappers delegating to `src/scripts/sync_local_installs.py`;
 PS5.1-safe; they never touch `settings.json`.
 
@@ -66,8 +66,11 @@ Acceptance harness: `examples/v4_acceptance.py`.
 
 ## Before claiming ready
 
+Requires Python >= 3.10 (CI matrix: 3.10-3.13; CI runs `python -m unittest
+discover -s tests` — pytest works locally and is equivalent here).
+
 ```powershell
-python -m pytest tests          # expect 197 passed
+python -m pytest tests          # expect 216+ passed
 ruff check src/scripts tests
 ```
 
