@@ -111,12 +111,15 @@ class WordGuardTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
 
     def test_chinese_garbled_text_warns(self) -> None:
+        # Regression: this test used to assert only rc in (0, 1) — always true,
+        # so it could never fail, and word_guard did not actually detect this
+        # common GBK-as-UTF8 mojibake. It must now report the corruption.
         with tempfile.TemporaryDirectory() as tmp:
             docx = Path(tmp) / "paper.docx"
             garbled = "鍚堢悊鐨勫紩鐢ㄦ牸寮? 浠ョ爺绌惰儗鏅? " * 6
             make_docx(docx, [garbled])
             result = run_guard(docx, min_chars=100)
-            self.assertIn(result.returncode, (0, 1))  # may pass or fail depending on threshold
+            self.assertIn("encoding corruption", result.stdout, result.stdout)
 
     def test_missing_document_xml_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

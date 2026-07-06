@@ -90,6 +90,10 @@ AUTHOR_DATE_CITE_PATTERN = re.compile(
     r"\([A-Z][A-Za-z'’.-]+(?:\s+(?:and|&)\s+[A-Z][A-Za-z'’.-]+)?\s+et al\.?\s+\d{4}[a-z]?\)"
 )
 
+# Runs of 3+ of these specific mojibake ideographs are the signature of
+# UTF-8 Chinese bytes decoded as GBK; ordinary Chinese does not match.
+MOJIBAKE_RUN_PATTERN = re.compile(r"[ョㄦ傞儗勫囬垾堢寮悊悽惰浠涓涙爺牸璇稉紩絔绌鈥鍚鏂鏅鐠鐢鐨锛閺閿]{3,}")
+
 
 def citation_style_finding(docx_text: str, source_tex: str) -> str | None:
     """Warn when a numeric \\bibliographystyle renders as author-date in Word.
@@ -904,9 +908,11 @@ def check_docx(
         garbled = re.findall(r"[\x80-\xff]{4,}", text)
         if garbled:
             findings.append(f"Possible garbled Chinese text: {len(garbled)} suspicious byte sequences. Re-export with UTF-8 encoding.")
-        # Check for common encoding corruption patterns
-        corruption = re.findall(r"鍚堛[劧渚佃繚閫嗘]", text)  # common gbk-decoded-as-utf8 pattern
-        if corruption:
+        # UTF-8 Chinese bytes decoded as GBK (then re-encoded) produce runs
+        # of specific mojibake ideographs; a run of 3+ is a strong signal and
+        # does not match ordinary Chinese. The previous pattern required an
+        # exact char sequence and missed the common case entirely.
+        if MOJIBAKE_RUN_PATTERN.search(text):
             findings.append("Chinese encoding corruption detected: GBK text decoded as UTF-8. Re-export with proper encoding.")
 
     style_finding = citation_style_finding(text, source_tex)
