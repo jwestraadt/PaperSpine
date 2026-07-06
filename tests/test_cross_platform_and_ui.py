@@ -175,6 +175,25 @@ class CrossPlatformLauncherTests(unittest.TestCase):
             "shell launcher must support at least one Linux terminal emulator",
         )
 
+    def test_shell_launcher_uses_temp_script_not_nested_quotes(self) -> None:
+        # Regression: the intake command was embedded as a quoted string
+        # containing both literal double quotes (which closed the macOS
+        # AppleScript string early -> osascript syntax error -2741) and
+        # single quotes (which broke the xfce4-terminal single-quoted form).
+        # Both terminals must now execute a temp launcher file instead.
+        sh = (ROOT / "src" / "scripts" / "launch_paperspine_ui.sh").read_text(encoding="utf-8")
+        self.assertIn("mktemp", sh)
+        # osascript must run "bash <tempfile>" — no interpolated $CMD with
+        # embedded quotes.
+        self.assertIn('do script \\"bash $LAUNCH_SCRIPT', sh)
+        self.assertNotIn("bash -c '$CMD'", sh)
+        # The whole launcher must stay POSIX-parseable.
+        result = subprocess.run(
+            ["bash", "-n", str(ROOT / "src" / "scripts" / "launch_paperspine_ui.sh")],
+            text=True, capture_output=True, check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_powershell_launcher_forces_utf8(self) -> None:
         ps = (ROOT / "src" / "scripts" / "launch_paperspine_ui.ps1").read_text(encoding="utf-8")
         self.assertIn("chcp 65001", ps)
