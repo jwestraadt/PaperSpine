@@ -165,6 +165,21 @@ class CrossPlatformLauncherTests(unittest.TestCase):
         self.assertTrue((ROOT / "src" / "scripts" / "launch_paperspine_ui.ps1").exists(), "Windows launcher")
         self.assertTrue((ROOT / "src" / "scripts" / "launch_paperspine_ui.sh").exists(), "macOS/Linux launcher")
 
+    def test_hermes_default_dir_is_platform_appropriate(self) -> None:
+        # Regression: the Hermes default was hardcoded to the Windows
+        # ~/AppData/Local layout for every OS, so bash install.sh on
+        # macOS/Linux created a bogus ~/AppData tree.
+        import importlib
+        from unittest import mock
+
+        sys.path.insert(0, str(ROOT / "src" / "scripts"))
+        sync = importlib.import_module("sync_local_installs")
+        home = Path("/home/user")
+        with mock.patch.object(sync.os, "name", "posix"):
+            self.assertNotIn("AppData", str(sync.default_hermes_skills_dir(home)))
+        with mock.patch.object(sync.os, "name", "nt"):
+            self.assertIn("AppData", str(sync.default_hermes_skills_dir(home)))
+
     def test_shell_launcher_supports_macos_and_linux(self) -> None:
         sh = (ROOT / "src" / "scripts" / "launch_paperspine_ui.sh").read_text(encoding="utf-8")
         self.assertIn("Darwin", sh)
@@ -198,6 +213,25 @@ class CrossPlatformLauncherTests(unittest.TestCase):
         ps = (ROOT / "src" / "scripts" / "launch_paperspine_ui.ps1").read_text(encoding="utf-8")
         self.assertIn("chcp 65001", ps)
         self.assertIn("UTF8", ps)
+
+    def test_powershell_scripts_resolve_python_robustly(self) -> None:
+        # Regression: the launcher hardcoded bare `python` (no python/python3/py
+        # fallback and no WindowsApps-stub guard), and install.ps1 trusted the
+        # first Get-Command hit without validating it. Both must now skip the
+        # WindowsApps stub and require a real 3.10+ interpreter.
+        for name in ("launch_paperspine_ui.ps1",):
+            ps = (ROOT / "src" / "scripts" / name).read_text(encoding="utf-8")
+            self.assertIn("WindowsApps", ps, f"{name} must skip the Store stub")
+            self.assertIn('"python", "python3", "py"', ps)
+            # No bare `python <path>` invocation remains.
+            self.assertNotRegex(ps, r"(?m)^\s*python\s+\$")
+        installer = (ROOT / "install.ps1").read_text(encoding="utf-8")
+        self.assertIn("WindowsApps", installer)
+        self.assertIn("3.10+", installer)
+
+    def test_shell_installer_requires_min_python(self) -> None:
+        sh = (ROOT / "install.sh").read_text(encoding="utf-8")
+        self.assertIn("version_info[:2] >= (3, 10)", sh)
 
     def test_intake_wizard_handles_windows_and_posix(self) -> None:
         wiz = (ROOT / "src" / "scripts" / "intake_wizard.py").read_text(encoding="utf-8")

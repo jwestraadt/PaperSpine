@@ -13,6 +13,15 @@ import unicodedata
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+if sys.version_info < (3, 10):  # noqa: UP036 - runtime guard for users on old interpreters
+    # The wizard (and the wider suite) require 3.10+ features such as
+    # zip(..., strict=...). Fail with a clear message instead of a cryptic
+    # TypeError mid-render on 3.8/3.9.
+    raise SystemExit(
+        "PaperSpine requires Python 3.10 or newer; this is "
+        f"{sys.version_info.major}.{sys.version_info.minor}. Please upgrade."
+    )
+
 WORKFLOWS = ("rewrite_existing", "build_from_materials")
 SCENES = ("journal", "conference", "report_review", "competition")
 TIERS = ("flash", "pro")

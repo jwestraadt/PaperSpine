@@ -16,10 +16,22 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+
+def default_hermes_skills_dir(home: Path) -> Path:
+    """Platform-appropriate default Hermes skills dir.
+
+    Windows uses the LocalAppData layout; other platforms use an XDG-style
+    data dir rather than creating a bogus ~/AppData tree on macOS/Linux.
+    """
+    if os.name == "nt":
+        return home / "AppData" / "Local" / "hermes" / "skills"
+    return home / ".local" / "share" / "hermes" / "skills"
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC_SKILL = ROOT / "src" / "skill"
@@ -48,7 +60,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--codex-skills-dir", type=Path, default=home / ".codex" / "skills")
     p.add_argument("--codex-prompts-dir", type=Path, default=home / ".codex" / "prompts")
     p.add_argument("--openclaw-skills-dir", type=Path, default=home / ".openclaw" / "skills")
-    p.add_argument("--hermes-skills-dir", type=Path, default=home / "AppData" / "Local" / "hermes" / "skills")
+    p.add_argument("--hermes-skills-dir", type=Path, default=default_hermes_skills_dir(home))
     p.add_argument("--config-home", type=Path, default=home / ".paperspine")
     p.add_argument("--desktop-root", type=Path, default=home / "Desktop" / "PaperSpine")
     return p.parse_args()

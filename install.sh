@@ -15,10 +15,17 @@ fi
 
 PYTHON=""
 for candidate in python3 python; do
-    if command -v "$candidate" >/dev/null 2>&1; then PYTHON="$candidate"; break; fi
+    if command -v "$candidate" >/dev/null 2>&1; then
+        # The shipped scripts require Python >= 3.10 (the CI floor); confirm
+        # the candidate actually meets it rather than trusting "a python 3".
+        if "$candidate" -c 'import sys; sys.exit(0 if sys.version_info[:2] >= (3, 10) else 1)' 2>/dev/null; then
+            PYTHON="$candidate"
+            break
+        fi
+    fi
 done
 if [ -z "$PYTHON" ]; then
-    echo "Python 3 not found on PATH. Install Python and retry." >&2
+    echo "Python 3.10+ not found on PATH. Install Python 3.10 or newer and retry." >&2
     exit 1
 fi
 
