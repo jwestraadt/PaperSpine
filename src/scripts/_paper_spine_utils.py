@@ -58,7 +58,9 @@ def split_paragraphs(text: str) -> list[str]:
     paragraphs: list[str] = []
     for part in raw_parts:
         cleaned = re.sub(r"\s+", " ", part).strip()
-        word_count = len(re.findall(r"[A-Za-z]+|\d+(?:\.\d+)?", cleaned))
+        # Count each CJK ideograph as one word — otherwise pure-Chinese
+        # paragraphs score 0 and are silently dropped.
+        word_count = len(re.findall(r"[A-Za-z]+|\d+(?:\.\d+)?|[一-鿿]", cleaned))
         if word_count >= 8:
             paragraphs.append(cleaned)
     return paragraphs
@@ -76,7 +78,9 @@ class CanonParagraph:
 def canonical(paragraph: str) -> str:
     paragraph = paragraph.lower()
     paragraph = re.sub(r"\[[^\]]+\]", " ", paragraph)
-    paragraph = re.sub(r"[^a-z0-9]+", " ", paragraph)
+    # Keep CJK ideographs — stripping them made every Chinese paragraph
+    # canonicalize to the empty string (similarity always 0.0).
+    paragraph = re.sub(r"[^a-z0-9一-鿿]+", " ", paragraph)
     return re.sub(r"\s+", " ", paragraph).strip()
 
 

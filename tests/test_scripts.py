@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import tempfile
@@ -15,6 +16,8 @@ def run_script(*args: str) -> subprocess.CompletedProcess[str]:
         [sys.executable, *args],
         cwd=ROOT,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=False,
@@ -187,6 +190,28 @@ This cites work [9] beyond the list.
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         self.assertIn("# Revision Audit", result.stdout)
         self.assertIn("Near-identical revised paragraphs", result.stdout)
+
+    def test_revision_audit_flags_shallow_chinese_revision(self) -> None:
+        # Regression: the shared paragraph splitter dropped pure-CJK
+        # paragraphs and the canonicalizer stripped all CJK, so a shallow
+        # (near-identical) Chinese revision always yielded 0 paragraphs and
+        # passed (exit 0). A near-identical zh revision must now warn.
+        para_a = "本文提出了一种新的轨迹对齐知识蒸馏方法，用于高效文本到图像扩散模型的压缩与加速。"
+        para_b = "实验结果表明，学生模型在仅需约三分之一参数量的情况下仍能保持接近教师模型的生成质量。"
+        with tempfile.TemporaryDirectory() as tmp:
+            original = Path(tmp) / "original.md"
+            revised = Path(tmp) / "revised.md"
+            original.write_text(para_a + "\n\n" + para_b + "\n", encoding="utf-8")
+            # Revised is essentially identical (a shallow edit).
+            revised.write_text(para_a + "\n\n" + para_b + "\n", encoding="utf-8")
+            result = run_script(
+                "src/scripts/revision_audit.py",
+                str(original), str(revised), "--json",
+            )
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["summary"]["revised_paragraphs"], 2)
+            self.assertTrue(payload["summary"]["shallow_warning"])
 
     def test_reference_inventory_indexes_local_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
