@@ -11,13 +11,25 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def run_wizard(stdin: str, output_dir: Path) -> subprocess.CompletedProcess[str]:
+def isolated_env(output_dir: Path) -> dict[str, str]:
+    """Env that never reads the developer's real ~/.paperspine/config.json.
+
+    Without PAPERSPINE_CONFIG_HOME the wizard falls back to Path.home(), so a
+    real global config with ui_language 'en' would flip the default UI away
+    from the zh these tests assert. Pin it to an isolated dir under the temp
+    output so the deterministic default (zh) is used.
+    """
     env = os.environ.copy()
     env["PYTHONUTF8"] = "1"
+    env["PAPERSPINE_CONFIG_HOME"] = str(output_dir / ".paperspine_home")
+    return env
+
+
+def run_wizard(stdin: str, output_dir: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "src/scripts/intake_wizard.py", "--output-dir", str(output_dir)],
         cwd=ROOT,
-        env=env,
+        env=isolated_env(output_dir),
         text=True,
         encoding="utf-8",
         input=stdin,
@@ -60,7 +72,7 @@ class IntakeWizardTests(unittest.TestCase):
                     str(output_dir),
                 ],
                 cwd=ROOT,
-                env={**os.environ, "PYTHONUTF8": "1"},
+                env=isolated_env(output_dir),
                 text=True,
                 encoding="utf-8",
                 stdout=subprocess.PIPE,
@@ -271,28 +283,29 @@ class IntakeWizardTests(unittest.TestCase):
             self.assertEqual(saved["ui_language"], "en")
 
     def test_keyboard_frame_preview_is_clean_and_structured(self) -> None:
-        result = subprocess.run(
-            [
-                sys.executable,
-                "src/scripts/intake_wizard.py",
-                "--preview-keyboard-frame",
-                "--preview-width",
-                "118",
-                "--workflow",
-                "build_from_materials",
-                "--scene",
-                "competition",
-                "--tier",
-                "pro",
-            ],
-            cwd=ROOT,
-            env={**os.environ, "PYTHONUTF8": "1"},
-            text=True,
-            encoding="utf-8",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "src/scripts/intake_wizard.py",
+                    "--preview-keyboard-frame",
+                    "--preview-width",
+                    "118",
+                    "--workflow",
+                    "build_from_materials",
+                    "--scene",
+                    "competition",
+                    "--tier",
+                    "pro",
+                ],
+                cwd=ROOT,
+                env=isolated_env(Path(tmp)),
+                text=True,
+                encoding="utf-8",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         self.assertIn("PaperSpine", result.stdout)
         self.assertIn("配置向导", result.stdout)
@@ -305,28 +318,29 @@ class IntakeWizardTests(unittest.TestCase):
 
     def test_preview_frame_has_no_raw_ansi_escapes(self) -> None:
         # color=False preview must not leak escape codes (legacy-console safety).
-        result = subprocess.run(
-            [
-                sys.executable,
-                "src/scripts/intake_wizard.py",
-                "--preview-keyboard-frame",
-                "--preview-width",
-                "118",
-                "--workflow",
-                "build_from_materials",
-                "--scene",
-                "competition",
-                "--tier",
-                "pro",
-            ],
-            cwd=ROOT,
-            env={**os.environ, "PYTHONUTF8": "1"},
-            text=True,
-            encoding="utf-8",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "src/scripts/intake_wizard.py",
+                    "--preview-keyboard-frame",
+                    "--preview-width",
+                    "118",
+                    "--workflow",
+                    "build_from_materials",
+                    "--scene",
+                    "competition",
+                    "--tier",
+                    "pro",
+                ],
+                cwd=ROOT,
+                env=isolated_env(Path(tmp)),
+                text=True,
+                encoding="utf-8",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         self.assertNotIn("\x1b[", result.stdout)
 

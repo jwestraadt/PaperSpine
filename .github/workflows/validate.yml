@@ -42,7 +42,12 @@ jobs:
       - name: Re-run dist sync from src
         run: python src/scripts/sync_local_installs.py --dist-only
       - name: Fail if dist copies drifted from src
-        run: git diff --exit-code
+        # Stage first so newly-generated (untracked) files are included:
+        # plain `git diff --exit-code` ignores untracked files and would pass
+        # even when the sync starts emitting a file not yet committed.
+        run: |
+          git add -A
+          git diff --cached --exit-code
 
   e2e:
     runs-on: ubuntu-latest
