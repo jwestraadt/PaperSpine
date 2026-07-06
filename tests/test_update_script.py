@@ -153,6 +153,51 @@ class PaperSpineUpdateScriptTests(unittest.TestCase):
             self.assertEqual(state["installed_version"], "2.0.0-rc.3")
             self.assertEqual(state["targets"], ["codex", "claude", "openclaw", "hermes"])
 
+    def test_update_preserves_unrelated_user_skill(self) -> None:
+        # Regression: stale-skill cleanup used to rmtree ANY directory whose
+        # name starts with "paper-spine", silently deleting a user's own
+        # unrelated skill. A legacy worker skill must be pruned; an unrelated
+        # paper-spine* skill must survive.
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            repo = create_repo(base / "PaperSpine-main", "2.0.0-rc.3")
+            archive = zip_repo(repo, base / "paperspine.zip")
+            write_json(base / "config" / "install_state.json", {"installed_version": "2.0.0-rc.2"})
+            codex_skills = base / "codex" / "skills"
+            legacy = codex_skills / "paper-spine-research"  # pre-V4 worker skill
+            legacy.mkdir(parents=True)
+            (legacy / "SKILL.md").write_text("legacy\n", encoding="utf-8")
+            user_skill = codex_skills / "paper-spine-notes"  # user's own skill
+            user_skill.mkdir(parents=True)
+            (user_skill / "SKILL.md").write_text("my notes\n", encoding="utf-8")
+            result = self.run_updater(base, archive, "--yes")
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            self.assertFalse(legacy.exists(), "legacy worker skill should be pruned")
+            self.assertTrue(user_skill.exists(), "unrelated user skill must survive")
+            self.assertEqual((user_skill / "SKILL.md").read_text(encoding="utf-8"), "my notes\n")
+
+    def test_already_latest_non_claude_target_does_not_write_settings(self) -> None:
+        # Regression: the already-up-to-date path unconditionally cleaned
+        # Claude skillOverrides (mutating ~/.claude/settings.json) and
+        # rewrote install_state even for codex-only runs.
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            repo = create_repo(base / "PaperSpine-main", "2.0.0")
+            archive = zip_repo(repo, base / "paperspine.zip")
+            write_json(base / "config" / "install_state.json", {"installed_version": "2.0.0"})
+            settings = base / "claude" / "settings.json"
+            settings.parent.mkdir(parents=True)
+            settings.write_text(
+                json.dumps({"skillOverrides": {"paper-spine": {"x": 1}}}) + "\n",
+                encoding="utf-8",
+            )
+            before = settings.read_text(encoding="utf-8")
+            result = self.run_updater(base, archive, "--yes", "--target", "codex")
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            self.assertIn("already latest", result.stdout)
+            # settings.json untouched for a codex-only already-latest run.
+            self.assertEqual(settings.read_text(encoding="utf-8"), before)
+
     def test_broken_archive_fails_without_overwriting_existing_install(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
@@ -204,6 +249,17 @@ class ValidateRepoTests(unittest.TestCase):
         self.assertIn("version", manifest)
         expected = json.loads((ROOT / "dist" / "paperspine_version.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["version"], expected["version"])
+
+    def test_find_repo_root_without_install_ps1(self) -> None:
+        # Regression: find_repo_root hard-required install.ps1, which
+        # validate_repo declares optional (issue #13). A package that renamed
+        # or dropped the root installer must still be locatable.
+        updater = self._import_updater()
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            root = create_repo(base / "PaperSpine-main", "9.9.9")
+            (root / "install.ps1").unlink()
+            self.assertEqual(updater.find_repo_root(base), root)
 
     def test_validate_repo_warns_but_accepts_missing_optional(self) -> None:
         # Issue #13 forward-compat: a doc/installer renamed or dropped in a newer

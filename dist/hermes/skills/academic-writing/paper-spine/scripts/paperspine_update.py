@@ -40,6 +40,15 @@ SUITE_SKILLS = (
 # sync_local_installs.HERMES_CATEGORY).
 HERMES_CATEGORY = "academic-writing"
 
+# Legacy worker-skill names from the pre-V4 flat suite. Only these managed
+# names are pruned on update — never arbitrary "paper-spine*" directories,
+# which could be a user's own unrelated skill (e.g. paper-spine-notes).
+LEGACY_SKILLS = (
+    "paper-spine-ui", "paper-spine-intake", "paper-spine-research", "paper-spine-citation",
+    "paper-spine-rewrite", "paper-spine-build", "paper-spine-latex", "paper-spine-audit",
+    "paper-spine-translate", "paper-spine-humanize", "paper-spine-update",
+)
+
 
 def default_hermes_skills_dir(home: Path) -> Path:
     """Platform-appropriate default Hermes skills dir.
@@ -184,7 +193,11 @@ def find_repo_root(base: Path) -> Path:
     candidates = [base]
     candidates.extend(path for path in base.iterdir() if path.is_dir())
     for candidate in candidates:
-        if (candidate / "dist" / VERSION_FILE).exists() and (candidate / "install.ps1").exists():
+        # Anchor on the version manifest — the one file that identifies a
+        # package root and that validate_repo hard-requires. install.ps1 is
+        # declared optional (issue #13), so requiring it here would abort a
+        # future package that renamed or dropped the root installer.
+        if (candidate / "dist" / VERSION_FILE).exists():
             return candidate
     raise UpdateError(f"Unable to locate PaperSpine repository root in: {base}")
 
@@ -311,10 +324,21 @@ def target_paths(target: str) -> dict[str, Path]:
     return paths
 
 
-def target_names(target: str) -> list[str]:
-    if target == "all":
-        return ["codex", "claude", "openclaw", "hermes"]
-    return [target]
+def prune_stale_skills(directory: Path, current_skills: set[str]) -> None:
+    """Remove only known legacy worker-skill dirs no longer shipped.
+
+    Never touches arbitrary paper-spine* directories — a user's own
+    unrelated skill (e.g. ``paper-spine-notes``) must survive an update.
+    """
+    if not directory.exists():
+        return
+    for existing in directory.iterdir():
+        if (
+            existing.is_dir()
+            and existing.name in LEGACY_SKILLS
+            and existing.name not in current_skills
+        ):
+            shutil.rmtree(existing)
 
 
 def install_target(root: Path, target: str) -> list[str]:
@@ -328,11 +352,8 @@ def install_target(root: Path, target: str) -> list[str]:
         for skill_dir in source.iterdir():
             if skill_dir.is_dir():
                 replace_tree(skill_dir, paths["codex"] / skill_dir.name)
-        # Clean up skills no longer in dist
-        if paths["codex"].exists():
-            for existing in paths["codex"].iterdir():
-                if existing.is_dir() and existing.name.startswith("paper-spine") and existing.name not in current_skills:
-                    shutil.rmtree(existing)
+        # Clean up legacy worker skills no longer in dist
+        prune_stale_skills(paths["codex"], current_skills)
         # Install the Codex /paperspine prompt entry point (validate_repo
         # requires dist/codex/prompts/paperspine.md; it must reach the user).
         if "codex_prompts" in paths:
@@ -350,11 +371,8 @@ def install_target(root: Path, target: str) -> list[str]:
         for skill_dir in source.iterdir():
             if skill_dir.is_dir():
                 replace_tree(skill_dir, paths["claude_skills"] / skill_dir.name)
-        # Clean up stale skills
-        if paths["claude_skills"].exists():
-            for existing in paths["claude_skills"].iterdir():
-                if existing.is_dir() and existing.name.startswith("paper-spine") and existing.name not in current_skills:
-                    shutil.rmtree(existing)
+        # Clean up legacy worker skills no longer in dist
+        prune_stale_skills(paths["claude_skills"], current_skills)
         # Install commands
         commands_source = root / "dist" / "claude" / "commands"
         paths["claude_commands"].mkdir(parents=True, exist_ok=True)
@@ -370,10 +388,7 @@ def install_target(root: Path, target: str) -> list[str]:
         for skill_dir in source.iterdir():
             if skill_dir.is_dir():
                 replace_tree(skill_dir, paths["openclaw"] / skill_dir.name)
-        if paths["openclaw"].exists():
-            for existing in paths["openclaw"].iterdir():
-                if existing.is_dir() and existing.name.startswith("paper-spine") and existing.name not in current_skills:
-                    shutil.rmtree(existing)
+        prune_stale_skills(paths["openclaw"], current_skills)
         installed.append("openclaw")
     if "hermes" in paths:
         # Hermes nests the skill under the academic-writing namespace
@@ -383,10 +398,7 @@ def install_target(root: Path, target: str) -> list[str]:
         for skill_dir in source.iterdir():
             if skill_dir.is_dir():
                 replace_tree(skill_dir, dest_base / skill_dir.name)
-        if dest_base.exists():
-            for existing in dest_base.iterdir():
-                if existing.is_dir() and existing.name.startswith("paper-spine") and existing.name not in current_skills:
-                    shutil.rmtree(existing)
+        prune_stale_skills(dest_base, current_skills)
         installed.append("hermes")
     return installed
 
@@ -465,8 +477,12 @@ def run(args: argparse.Namespace) -> int:
     comparison = compare_versions(current, latest)
     if comparison >= 0:
         print(f"PaperSpine is already latest: {current}")
-        if comparison == 0 and not args.check_only:
-            write_install_state(config_dir, manifest, target_names(args.target))
+        # Already up to date: do not rewrite install_state (it would stamp a
+        # fresh timestamp and could claim targets that were never installed
+        # this run), and only clean stale Claude skillOverrides when Claude is
+        # actually in scope — never touch ~/.claude/settings.json for
+        # codex/openclaw/hermes-only runs.
+        if comparison == 0 and not args.check_only and args.target in ("all", "claude"):
             sync_skill_overrides(resolve_claude_settings_dir())
         return 0
 
