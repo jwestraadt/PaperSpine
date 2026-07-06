@@ -44,6 +44,11 @@ def main():
     page = 1
     while True:
         batch = api(f"https://api.github.com/repos/{REPO}/stargazers?per_page=100&page={page}")
+        if batch is None:
+            # A None (vs an empty list) means the API was unreachable after
+            # retries. Aborting loudly avoids publishing a truncated/empty
+            # atlas as if the repo had lost its stargazers.
+            sys.exit(f"stargazer fetch failed at page {page} (API unreachable); aborting")
         if not batch:
             break
         logins += [u["login"] for u in batch]

@@ -83,6 +83,23 @@ class WordGuardTests(unittest.TestCase):
             result = run_guard(docx)
             self.assertEqual(result.returncode, 1)
 
+    def test_fix_fonts_on_corrupt_zip_degrades_gracefully(self) -> None:
+        # Regression: fix_docx_fonts opened the zip without catching
+        # BadZipFile (and used a bare next() for word/document.xml), so
+        # --fix-fonts on a corrupt .docx crashed with a raw traceback instead
+        # of the graceful "not a valid zip/docx file" report.
+        with tempfile.TemporaryDirectory() as tmp:
+            docx = Path(tmp) / "paper.docx"
+            docx.write_text("not a zip file", encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, "src/scripts/word_guard.py", str(docx),
+                 "--fix-fonts", "--language", "en", "--markdown"],
+                cwd=ROOT, text=True, encoding="utf-8", errors="replace",
+                capture_output=True, check=False,
+            )
+            self.assertNotIn("Traceback", result.stdout + result.stderr)
+            self.assertIn("not a valid zip", result.stdout)
+
     def test_non_docx_extension_warns(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             docx = Path(tmp) / "paper.pdf"

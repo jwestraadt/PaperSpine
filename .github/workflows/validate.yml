@@ -1,7 +1,10 @@
 name: Validate skill
 
 on:
+  # Restrict push to main so a same-repo PR branch does not run the whole
+  # matrix twice per push (once for push, once for pull_request).
   push:
+    branches: [main]
   pull_request:
 
 jobs:

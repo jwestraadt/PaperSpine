@@ -703,14 +703,20 @@ def fix_docx_fonts(docx_path: Path, mode: str) -> bool:
     if not docx_path.exists():
         return False
     changed = False
+    # A corrupt or non-zip .docx must degrade gracefully (return False and let
+    # check_docx report "not a valid zip/docx file"), not raise a raw traceback.
+    try:
+        with zipfile.ZipFile(docx_path, "r") as zin:
+            entries = [(item, zin.read(item.filename)) for item in zin.infolist()]
+    except zipfile.BadZipFile:
+        return False
+    names = {item.filename for item, _ in entries}
+    # word/document.xml is read with a bare next() below; guard it too.
+    if "word/styles.xml" not in names or "word/document.xml" not in names:
+        return False
     backup_path = docx_path.with_suffix(docx_path.suffix + ".bak_fonts")
     if not backup_path.exists():
         shutil.copy2(docx_path, backup_path)
-    with zipfile.ZipFile(docx_path, "r") as zin:
-        entries = [(item, zin.read(item.filename)) for item in zin.infolist()]
-    names = {item.filename for item, _ in entries}
-    if "word/styles.xml" not in names:
-        return False
     document_xml = next(data for item, data in entries if item.filename == "word/document.xml")
     document_root = ElementTree.fromstring(document_xml)
     styles_xml = next(data for item, data in entries if item.filename == "word/styles.xml")

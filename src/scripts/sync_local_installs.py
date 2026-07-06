@@ -67,9 +67,17 @@ def parse_args() -> argparse.Namespace:
 
 
 def copy_tree(src: Path, dest: Path) -> None:
+    # Stage into a sibling temp dir, then swap, so a failure mid-copy (a locked
+    # file on Windows, a full disk, Ctrl-C) leaves the previous working install
+    # intact instead of a deleted-but-not-yet-recreated dest.
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    staging = dest.parent / f".{dest.name}.paperspine-staging"
+    if staging.exists():
+        shutil.rmtree(staging)
+    shutil.copytree(src, staging, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", "*.pyc"))
     if dest.exists():
         shutil.rmtree(dest)
-    shutil.copytree(src, dest, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", "*.pyc"))
+    staging.rename(dest)
 
 
 # Build/install-only scripts that must NOT ship inside an installed skill
