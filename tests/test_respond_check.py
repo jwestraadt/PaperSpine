@@ -135,6 +135,32 @@ class RespondCheckTests(unittest.TestCase):
             self.assertEqual(payload["missing_comments"], [])
             self.assertEqual(payload["comment_count"], 2)
 
+    def test_no_recognizable_comment_ids_fails(self) -> None:
+        # Regression: a package whose extracted-comments file yields zero
+        # parseable IDs used to PASS (ok stayed True), so a response package
+        # covering none of the reviewer comments cleared the gate.
+        with tempfile.TemporaryDirectory() as tmp:
+            pkg = write_package(
+                Path(tmp),
+                extracted_ids=[],
+                matrix_rows=[_matrix_row("C1")],
+                letter_ids=["C1"],
+            )
+            (pkg / "reviewer_comments_extracted.md").write_text(
+                "# Extracted Reviewer Comments\n\n"
+                "Point one: the reviewer questions the novelty of the method.\n"
+                "Point two: the evaluation lacks a strong baseline.\n",
+                encoding="utf-8",
+            )
+            result = run(pkg)
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertFalse(payload["ok"])
+            self.assertTrue(
+                any("No comment IDs found" in f for f in payload["findings"]),
+                payload["findings"],
+            )
+
     def test_empty_status_cell_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             pkg = write_package(

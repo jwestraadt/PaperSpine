@@ -163,6 +163,9 @@ def check_respond(out_dir: Path) -> RespondCheckResult:
         extracted_ids = _extract_comment_ids(text)
         result.comment_count = len(extracted_ids)
         if not extracted_ids:
+            # Zero parseable IDs means coverage was never verified — that must
+            # fail the gate, not pass it by default.
+            result.ok = False
             result.findings.append(
                 "No comment IDs found in reviewer_comments_extracted.md. "
                 "Expected format: R1.C1, C1, Comment 1, etc."
