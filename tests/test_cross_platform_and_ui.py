@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -202,12 +204,16 @@ class CrossPlatformLauncherTests(unittest.TestCase):
         # embedded quotes.
         self.assertIn('do script \\"bash $LAUNCH_SCRIPT', sh)
         self.assertNotIn("bash -c '$CMD'", sh)
-        # The whole launcher must stay POSIX-parseable.
-        result = subprocess.run(
-            ["bash", "-n", str(ROOT / "src" / "scripts" / "launch_paperspine_ui.sh")],
-            text=True, capture_output=True, check=False,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
+        # The whole launcher must stay POSIX-parseable — only meaningful where a
+        # real POSIX bash exists. On Windows CI "bash" may resolve to a WSL stub
+        # that is not installed, so gate this on a usable bash.
+        bash = shutil.which("bash")
+        if bash and os.name != "nt":
+            result = subprocess.run(
+                [bash, "-n", str(ROOT / "src" / "scripts" / "launch_paperspine_ui.sh")],
+                text=True, capture_output=True, check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_powershell_launcher_forces_utf8(self) -> None:
         ps = (ROOT / "src" / "scripts" / "launch_paperspine_ui.ps1").read_text(encoding="utf-8")
