@@ -12,9 +12,10 @@ venue or conference rules.
 **Goal:** Review the manuscript's structure, argument flow, and presentation
 quality.
 
-**Supplementary context** (beyond the manuscript sections in the prompt):
-`writing_rationale_matrix.md`, `style_profile.md`,
-`exemplar_learning_dossier.md`.
+**Orchestrator note:** supply these materials in this reviewer's context at
+dispatch, alongside the generated prompt: `writing_rationale_matrix.md`,
+`style_profile.md`, `exemplar_learning_dossier.md`. The reviewer itself reads
+nothing else — in particular, never the other reviewers' prompts or outputs.
 
 Findings organized by:
 

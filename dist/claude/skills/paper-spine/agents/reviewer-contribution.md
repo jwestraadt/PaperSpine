@@ -13,9 +13,11 @@ Do NOT fabricate target venue or conference rules.
 **Goal:** Review the manuscript's contribution: significance, novelty, and
 whether the evidence carries the claims.
 
-**Supplementary context** (beyond the manuscript sections in the prompt):
-`confirmed_contribution.md`, `citation_support_bank.md`, `evidence_bank.md`,
-`source_index.md`.
+**Orchestrator note:** supply these materials in this reviewer's context at
+dispatch, alongside the generated prompt: `confirmed_contribution.md`,
+`citation_support_bank.md`, `evidence_bank.md`, `source_index.md`. The reviewer
+itself reads nothing else — in particular, never the other reviewers' prompts
+or outputs.
 
 Findings organized by:
 

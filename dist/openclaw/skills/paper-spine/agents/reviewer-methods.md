@@ -12,8 +12,10 @@ venue or conference rules.
 **Goal:** Review the manuscript for method rigor, evidence sufficiency, and
 reproducibility.
 
-**Supplementary context** (beyond the manuscript sections in the prompt):
-`writing_rationale_matrix.md`, `evidence_bank.md`.
+**Orchestrator note:** supply these materials in this reviewer's context at
+dispatch, alongside the generated prompt: `writing_rationale_matrix.md`,
+`evidence_bank.md`. The reviewer itself reads nothing else — in particular,
+never the other reviewers' prompts or outputs.
 
 Findings organized by:
 

@@ -37,6 +37,7 @@ the wizard runs in a real interactive terminal window:
 $launcher = @(
   "$env:USERPROFILE\.codex\skills\paper-spine\scripts\launch_paperspine_ui.ps1",
   "$env:USERPROFILE\.claude\skills\paper-spine\scripts\launch_paperspine_ui.ps1",
+  "$env:USERPROFILE\.openclaw\skills\paper-spine\scripts\launch_paperspine_ui.ps1",
   "$env:USERPROFILE\AppData\Local\hermes\skills\academic-writing\paper-spine\scripts\launch_paperspine_ui.ps1"
 ) | Where-Object { Test-Path $_ } | Select-Object -First 1
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File $launcher -OutputDir paper_rewriting_output
@@ -47,6 +48,7 @@ For a user-run terminal, the direct wizard command is:
 ```bash
 WIZARD="$HOME/.codex/skills/paper-spine/scripts/intake_wizard.py"
 [ -f "$WIZARD" ] || WIZARD="$HOME/.claude/skills/paper-spine/scripts/intake_wizard.py"
+[ -f "$WIZARD" ] || WIZARD="$HOME/.openclaw/skills/paper-spine/scripts/intake_wizard.py"
 python "$WIZARD" --output-dir paper_rewriting_output
 ```
 
@@ -60,6 +62,7 @@ For first-time setup or changing interface language:
 ```bash
 WIZARD="$HOME/.codex/skills/paper-spine/scripts/intake_wizard.py"
 [ -f "$WIZARD" ] || WIZARD="$HOME/.claude/skills/paper-spine/scripts/intake_wizard.py"
+[ -f "$WIZARD" ] || WIZARD="$HOME/.openclaw/skills/paper-spine/scripts/intake_wizard.py"
 python "$WIZARD" --setup-global --output-dir paper_rewriting_output
 ```
 

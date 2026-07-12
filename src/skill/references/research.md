@@ -38,7 +38,7 @@ configured `scene` (note the underscore→hyphen conversion for `report_review`)
 | `report_review` | `references/scenario-report-review.md` |
 | `competition` | `references/scenario-competition.md` |
 
-When the target is a **named journal venue**, additionally apply
+When the target is a **named journal or conference venue**, additionally apply
 `references/target-journal-research.md` and save
 `target_journal_research.md` — the logic-transfer audit consumes it. For
 `competition` and `report_review` scenes, apply
@@ -64,8 +64,9 @@ Ingestion rules:
   `papers/`) before any web/MCP collection; `specified_paths` indexes only
   `reference_paths`; `web` may skip local indexing when no local files exist.
 - Source IDs are stable (`REF001`, `REF002`, …) — later stages cite them.
-- Local reference papers teach structure and rhetoric only. Do **not** treat
-  them as user evidence for this paper's results.
+- Local references can support literature context, citation expansion, style
+  learning, and background claims. Do **not** treat them as user evidence for
+  this paper's results.
 - Never bypass paywalls or login restrictions to obtain a source.
 
 ## Stage 2 — Three Parallel Specialist Sub-Agents
