@@ -237,3 +237,20 @@ def year_from_row(row: list[str]) -> int | None:
     # because CJK ideographs are word characters, so \b would reject it.
     years = [int(value) for value in re.findall(r"(?<!\d)(19\d{2}|20\d{2})(?!\d)", joined)]
     return max(years) if years else None
+
+
+def find_citation_table(text: str) -> tuple[list[str], list[list[str]]]:
+    """Return (header, data_rows) for the first citation-support-bank table.
+
+    Identifies the bank by a header that carries a reference token plus `claim`
+    and `sentence` columns; returns ([], []) when no such table is present.
+    """
+    for table in markdown_tables(text):
+        if not table:
+            continue
+        header = table[0]
+        header_text = " ".join(cell.lower() for cell in header)
+        has_reference = any(term in header_text for term in ("citation", "reference", "bibtex"))
+        if has_reference and "claim" in header_text and "sentence" in header_text:
+            return header, table[1:]
+    return [], []

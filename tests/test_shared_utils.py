@@ -11,6 +11,7 @@ from _paper_spine_utils import (
     SHORT_OK_MIN_CHARS,
     CanonParagraph,
     canonical,
+    find_citation_table,
     is_placeholder,
     is_separator_row,
     make_canon,
@@ -25,8 +26,37 @@ from _paper_spine_utils import (
     split_table_line,
     strip_tex_comments,
     table_rows,
+    verdict_fields,
     year_from_row,
 )
+
+
+class VerdictFieldsTests(unittest.TestCase):
+    def test_pass_and_fail(self) -> None:
+        self.assertEqual(verdict_fields(True), {"status": "PASS", "ok": True})
+        self.assertEqual(verdict_fields(False), {"status": "FAIL", "ok": False})
+
+    def test_ok_is_coerced_to_bool(self) -> None:
+        v = verdict_fields(1)
+        self.assertIs(v["ok"], True)
+
+
+class FindCitationTableTests(unittest.TestCase):
+    BANK = (
+        "# Bank\n\n"
+        "| Reference | Claim | Support Claim Sentence |\n"
+        "|---|---|---|\n"
+        "| Smith 2024 | C1 | The method improves accuracy under matched budgets. |\n"
+    )
+
+    def test_finds_citation_table(self) -> None:
+        header, rows = find_citation_table(self.BANK)
+        self.assertIn("Reference", header)
+        self.assertEqual(len(rows), 1)
+
+    def test_returns_empty_when_absent(self) -> None:
+        header, rows = find_citation_table("| a | b |\n|---|---|\n| 1 | 2 |\n")
+        self.assertEqual((header, rows), ([], []))
 
 
 class IsPlaceholderTests(unittest.TestCase):

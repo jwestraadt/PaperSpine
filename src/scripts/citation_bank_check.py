@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import markdown_tables, verdict_fields, year_from_row
+from _paper_spine_utils import find_citation_table, verdict_fields, year_from_row
 
 CURRENT_YEAR = 2026
 DEFAULT_TARGET_COUNT = 20
@@ -59,20 +59,6 @@ def has_claim_sentence(row: list[str]) -> bool:
 def has_reference_format(row: list[str]) -> bool:
     joined = " ".join(row).lower()
     return any(token in joined for token in ("@", "doi", "http", "arxiv", "proceedings", "journal"))
-
-
-def find_citation_table(text: str) -> tuple[list[str], list[list[str]]]:
-    for table in markdown_tables(text):
-        if not table:
-            continue
-        header = table[0]
-        header_text = " ".join(cell.lower() for cell in header)
-        has_reference = any(term in header_text for term in ("citation", "reference", "bibtex"))
-        has_claim = "claim" in header_text
-        has_sentence = "sentence" in header_text
-        if has_reference and has_claim and has_sentence:
-            return header, table[1:]
-    return [], []
 
 
 def validate(path: Path, target_count: int, multiplier: int, recent_years: int, recent_ratio: float) -> CitationBankResult:

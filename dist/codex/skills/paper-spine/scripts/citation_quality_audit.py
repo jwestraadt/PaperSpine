@@ -29,7 +29,7 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
-from _paper_spine_utils import markdown_tables, read_config
+from _paper_spine_utils import find_citation_table, read_config
 
 DOI_RE = re.compile(
     r"\b(?:doi\s*[:=]\s*|https?://doi\.org/|https?://dx\.doi\.org/)?(10\.\d{4,}/[^\s,;)\]]+)",
@@ -267,20 +267,6 @@ def normalize_header(value: str) -> str:
     value = re.sub(r"<[^>]+>", " ", value)
     value = re.sub(r"[*_`]", "", value)
     return re.sub(r"\s+", " ", value.strip().lower())
-
-
-def find_citation_table(text: str) -> tuple[list[str], list[list[str]]]:
-    for table in markdown_tables(text):
-        if not table:
-            continue
-        header = table[0]
-        header_text = " ".join(cell.lower() for cell in header)
-        has_reference = any(term in header_text for term in ("citation", "reference", "bibtex"))
-        has_claim = "claim" in header_text
-        has_sentence = "sentence" in header_text
-        if has_reference and has_claim and has_sentence:
-            return header, table[1:]
-    return [], []
 
 
 def title_similarity(a: str, b: str) -> float:

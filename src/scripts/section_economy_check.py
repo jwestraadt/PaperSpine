@@ -21,7 +21,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _paper_spine_utils import verdict_fields
+from _paper_spine_utils import read_text, verdict_fields
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -36,15 +36,6 @@ STUB_UNITS = 120  # ~1-2 paragraphs of content (CJK chars + Latin words)
 class SectionFinding:
     severity: str
     message: str
-
-
-def read_text(path: Path) -> str:
-    for encoding in ("utf-8", "utf-8-sig", "gb18030", "latin-1"):
-        try:
-            return path.read_text(encoding=encoding)
-        except UnicodeDecodeError:
-            continue
-    return path.read_text(errors="replace")
 
 
 def find_main_tex(target: Path) -> Path | None:

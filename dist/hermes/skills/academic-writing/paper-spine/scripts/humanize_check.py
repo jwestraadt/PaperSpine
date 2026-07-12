@@ -18,29 +18,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _paper_spine_utils import verdict_fields
-
-# --- self-contained table helpers (no _paper_spine_utils import) ---
-
-def _split_table_line(line: str) -> list[str]:
-    return [c.strip() for c in line.strip().strip("|").split("|")]
-
-
-def _is_sep(cells: list[str]) -> bool:
-    return bool(cells) and all(c and set(c) <= {"-", ":", " "} for c in cells)
-
-
-def _table_rows(text: str) -> tuple[list[str], list[list[str]]]:
-    rows: list[list[str]] = []
-    for raw in text.splitlines():
-        line = raw.strip()
-        if not (line.startswith("|") and line.endswith("|")):
-            continue
-        cells = _split_table_line(line)
-        if _is_sep(cells):
-            continue
-        rows.append(cells)
-    return (rows[0], rows[1:]) if rows else ([], [])
+from _paper_spine_utils import table_rows, verdict_fields
 
 
 def _split_paragraphs(text: str) -> list[str]:
@@ -847,7 +825,7 @@ def check_matrix(matrix_path: Path, manuscript_text: str, lang: str, humanize_ti
         return result
 
     text = matrix_path.read_text(encoding="utf-8", errors="ignore")
-    header, rows = _table_rows(text)
+    header, rows = table_rows(text)
     if not header:
         structural_required.append("humanize_matrix.md has no parseable table")
         result.required_findings = structural_required
