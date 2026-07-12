@@ -18,6 +18,10 @@ Ask these fields in order:
 9. Special requirements.
 10. Optional Word output: `none` or `docx`.
 11. Optional translated artifact package for English output: `none` or `zh`.
+12. Reference mode: `local_first` (default), `specified_paths`, or `web`.
+13. Reference paths: local reference folders/files (default `["."]`).
+14. Citation target count: integer (default `20`).
+15. Humanize tier: `none` (default), `light`, `medium`, or `heavy`.
 
 ## Supported Command-Line UI
 
@@ -81,6 +85,10 @@ official_urls:
 special_requirements:
 word_output:
 translation_package:
+reference_mode:
+reference_paths:
+citation_target_count:
+humanize_tier:
 ```
 
-The JSON is the source of truth for later skills.
+The JSON is the source of truth for the later stages.

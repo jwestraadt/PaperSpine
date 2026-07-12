@@ -30,7 +30,7 @@ Collect workflow options and write validated configuration before any substantiv
 | `reference_mode` | `local_first`, `specified_paths`, `web` | `local_first` |
 | `reference_paths` | list of local paths | `["."]` |
 | `citation_target_count` | integer | `20` |
-| `humanize_tier` | `none`, `light`, `medium`, `heavy` | `medium` |
+| `humanize_tier` | `none`, `light`, `medium`, `heavy` | `none` |
 
 ## UI
 
@@ -39,6 +39,8 @@ Collect workflow options and write validated configuration before any substantiv
 - In Codex, use the absolute path to `launch_paperspine_ui.ps1` with escalated permissions.
 - Fallback: numbered menus; chat-based questions only when terminal execution is impossible.
 - Never require the user to hand-write JSON.
+- Question order, absolute-launcher resolution for all hosts, the stdin-hang
+  warning, and the last-resort chat template: `references/interactive-intake.md`.
 
 ## Scripts
 
