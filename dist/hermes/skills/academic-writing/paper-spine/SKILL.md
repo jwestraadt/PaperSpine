@@ -342,15 +342,7 @@ python scripts/progress_check.py paper_rewriting_output --gate word --require
 Use `--require` so the gate checks Word even when config says `none` — the file
 should exist and be valid. If `word_output` is explicitly `none`, skip this gate.
 
-### Stage 9 — Submission Package (if requested)
-
-If submission materials are requested, read `references/submission.md`,
-create `submission_package/`, and run:
-```bash
-python scripts/submission_check.py paper_rewriting_output/submission_package --fix-fonts --markdown --write
-```
-
-### Stage 10 — Translation Package (if applicable)
+### Stage 9 — Translation Package (if applicable)
 
 If `output_language` is `en` and `translation_package` is `zh`, read
 `references/translate.md` and produce the complete `translation_zh/` package.
@@ -373,6 +365,14 @@ translation report — do not silently skip the final Chinese Word document.
 **Gate:**
 ```bash
 python scripts/progress_check.py paper_rewriting_output --gate translation --require
+```
+
+### Stage 10 — Submission Package (if requested)
+
+If submission materials are requested, read `references/submission.md`,
+create `submission_package/`, and run:
+```bash
+python scripts/submission_check.py paper_rewriting_output/submission_package --fix-fonts --markdown --write
 ```
 
 ### Stage 11 — Review Response (if requested)

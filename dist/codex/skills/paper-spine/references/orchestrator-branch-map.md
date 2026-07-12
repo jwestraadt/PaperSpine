@@ -33,7 +33,11 @@ missing.
    `translation_package` is `zh`. Gate: `translation`.
 10. Submission (conditional): produce `submission_package/` when requested.
     Gate: `submission`.
-11. Final audit: verify `citation_quality_audit.md`,
+11. Review Response (conditional, command-triggered): read `references/respond.md`,
+    produce `review_response/`, and run `respond_check.py`. Like Humanize, this
+    stage has no `progress_check.py` gate; it runs only when the user supplies
+    reviewer comments.
+12. Final audit: verify `citation_quality_audit.md`,
     `final_artifact_manifest.md`, `artifact_check.md`, and Word report before
     declaring complete. Gate: `final_audit`.
 
@@ -58,6 +62,7 @@ playbook:
 | `word` | PENDING | `references/latex.md` |
 | `translation` | PENDING | `references/translate.md` |
 | `submission` | PENDING | `references/submission.md` |
+| `respond` | (ungated) | `references/respond.md` |
 | `final_audit` | PENDING | `references/audit.md` |
 
 ## Anti-Skip Rule
