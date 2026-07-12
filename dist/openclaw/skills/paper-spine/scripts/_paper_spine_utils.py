@@ -85,6 +85,18 @@ def is_placeholder(cell: str, min_chars: int = MIN_CELL_CHARS) -> bool:
     return len(stripped) < min_chars
 
 
+# — JSON verdict —————————————————————————————————————————————————————————————
+
+def verdict_fields(ok: bool) -> dict:
+    """The canonical pass/fail verdict every checker's --json output carries.
+
+    Returns both a machine field (`ok`: bool) and a human token
+    (`status`: "PASS"/"FAIL") so consumers can key off either without guessing
+    per-script conventions (`blocked`, bare arrays, missing keys, …).
+    """
+    return {"status": "PASS" if ok else "FAIL", "ok": bool(ok)}
+
+
 # — LaTeX / Markdown normalization ————————————————————————————————————————————
 
 def strip_tex_comments(text: str) -> str:

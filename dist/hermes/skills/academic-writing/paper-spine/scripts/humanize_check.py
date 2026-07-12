@@ -17,6 +17,9 @@ from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _paper_spine_utils import verdict_fields
+
 # --- self-contained table helpers (no _paper_spine_utils import) ---
 
 def _split_table_line(line: str) -> list[str]:
@@ -1057,7 +1060,7 @@ def main() -> int:
 
     if args.json:
         print(json.dumps({
-            "ok": result.ok, "humanize_tier": result.humanize_tier,
+            **verdict_fields(result.ok), "humanize_tier": result.humanize_tier,
             "matrix_rows": result.matrix_rows,
             "paragraphs": result.manuscript_paragraphs,
             "coverage": result.coverage_ratio,

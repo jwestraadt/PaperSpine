@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import table_rows
+from _paper_spine_utils import table_rows, verdict_fields
 
 # ---------------------------------------------------------------------------
 # comment ID extraction
@@ -406,7 +406,7 @@ def main() -> int:
 
     if args.json:
         print(json.dumps({
-            "ok": result.ok,
+            **verdict_fields(result.ok),
             "comment_count": result.comment_count,
             "findings": result.findings,
             "warnings": result.warnings,

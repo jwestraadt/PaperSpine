@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import is_placeholder, read_text, table_rows
+from _paper_spine_utils import is_placeholder, read_text, table_rows, verdict_fields
 
 # Column -> substrings that identify its header cell (case-insensitive).
 CLAIM_TERMS = ("contribution claim", "claim tested", "contribution")
@@ -189,7 +189,7 @@ def main() -> int:
         report_path.write_text(markdown, encoding="utf-8")
 
     if args.json:
-        print(json.dumps(result.__dict__, ensure_ascii=False, indent=2))
+        print(json.dumps({**result.__dict__, **verdict_fields(result.ok)}, ensure_ascii=False, indent=2))
     if args.markdown or not args.json:
         print(markdown)
     return 0 if result.ok else 1

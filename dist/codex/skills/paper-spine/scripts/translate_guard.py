@@ -22,7 +22,7 @@ from xml.etree import ElementTree
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import table_rows
+from _paper_spine_utils import table_rows, verdict_fields
 
 # ---------------------------------------------------------------------------
 # constants
@@ -689,7 +689,9 @@ def main() -> int:
 
     if args.json:
         print(json.dumps({
-            "output_dir": str(out_dir), "blocked": report.blocked,
+            "output_dir": str(out_dir),
+            **verdict_fields(not report.blocked),
+            "blocked": report.blocked,
             "total_findings": report.total_findings,
             "findings": [{"id": f.id, "severity": f.severity, "what": f.what, "fix": f.fix} for f in all_findings],
         }, ensure_ascii=False, indent=2))

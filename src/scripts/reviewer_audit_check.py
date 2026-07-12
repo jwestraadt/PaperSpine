@@ -27,7 +27,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import SHORT_OK_MIN_CHARS, is_placeholder, table_rows
+from _paper_spine_utils import (
+    SHORT_OK_MIN_CHARS,
+    is_placeholder,
+    table_rows,
+    verdict_fields,
+)
 
 # The six criteria are fixed because they are the axes nearly every venue's
 # review form scores. The audit is incomplete if any are missing.
@@ -312,7 +317,7 @@ def main() -> int:
         print(f"Wrote {report_path}", file=sys.stderr)
 
     if args.json:
-        print(json.dumps(result.__dict__, ensure_ascii=False, indent=2))
+        print(json.dumps({**result.__dict__, **verdict_fields(result.ok)}, ensure_ascii=False, indent=2))
     if args.markdown or not args.json:
         print(markdown)
     return 0 if result.ok else 1

@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import markdown_tables, year_from_row
+from _paper_spine_utils import markdown_tables, verdict_fields, year_from_row
 
 CURRENT_YEAR = 2026
 DEFAULT_TARGET_COUNT = 20
@@ -157,7 +157,7 @@ def main() -> int:
         report_path = path.parent / "citation_bank_check.md"
         report_path.write_text(markdown, encoding="utf-8")
     if args.json:
-        print(json.dumps(result.__dict__, ensure_ascii=False, indent=2))
+        print(json.dumps({**result.__dict__, **verdict_fields(result.ok)}, ensure_ascii=False, indent=2))
     if args.markdown or not args.json:
         print(markdown)
     return 0 if result.ok else 1

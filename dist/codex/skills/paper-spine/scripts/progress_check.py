@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import read_config
+from _paper_spine_utils import read_config, verdict_fields
 
 
 @dataclass
@@ -698,6 +698,7 @@ def to_markdown(result: ProgressResult) -> str:
 def to_json_dict(result: ProgressResult) -> dict:
     return {
         "output_dir": result.output_dir,
+        **verdict_fields(result.is_complete),
         "next_stage": result.next_stage,
         "next_action": result.next_action,
         "is_complete": result.is_complete,

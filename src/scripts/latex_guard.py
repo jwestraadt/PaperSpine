@@ -15,6 +15,9 @@ import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _paper_spine_utils import verdict_fields
+
 GRAPHIC_EXTENSIONS = [".pdf", ".png", ".jpg", ".jpeg", ".eps", ".tif", ".tiff"]
 
 
@@ -402,12 +405,17 @@ def main(argv: list[str]) -> int:
         return 2
 
     findings = run_checks(args.tex.resolve(), args.bib.resolve() if args.bib else None)
+    has_error = any(item.severity == "error" for item in findings)
     if args.json:
-        print(json.dumps([asdict(item) for item in findings], indent=2, ensure_ascii=False))
+        print(json.dumps(
+            {**verdict_fields(not has_error), "findings": [asdict(item) for item in findings]},
+            indent=2,
+            ensure_ascii=False,
+        ))
     else:
         print(render_markdown(args.tex.resolve(), args.bib.resolve() if args.bib else None, findings), end="")
 
-    return 1 if any(item.severity == "error" for item in findings) else 0
+    return 1 if has_error else 0
 
 
 if __name__ == "__main__":

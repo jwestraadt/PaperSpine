@@ -20,6 +20,9 @@ import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _paper_spine_utils import verdict_fields
+
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 if hasattr(sys.stderr, "reconfigure"):
@@ -154,13 +157,14 @@ def main(argv: list[str]) -> int:
     text = read_text(tex_path)
     count, findings = check(text, args.max_sections)
 
+    has_error = any(f.severity == "error" for f in findings)
     if args.json:
         print(json.dumps(
             {
                 "manuscript": str(tex_path),
                 "section_count": count,
                 "max_sections": args.max_sections,
-                "ok": not any(f.severity == "error" for f in findings),
+                **verdict_fields(not has_error),
                 "findings": [asdict(f) for f in findings],
             },
             ensure_ascii=False,
@@ -169,7 +173,7 @@ def main(argv: list[str]) -> int:
     if args.markdown or not args.json:
         print(render_markdown(tex_path, count, args.max_sections, findings))
 
-    return 1 if any(f.severity == "error" for f in findings) else 0
+    return 1 if has_error else 0
 
 
 if __name__ == "__main__":

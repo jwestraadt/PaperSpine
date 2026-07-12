@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _paper_spine_utils import (
     markdown_tables,
     read_config,
+    verdict_fields,
     year_from_row,
 )
 
@@ -1138,7 +1139,7 @@ def main() -> int:
         (output_dir / "artifact_check.md").write_text(markdown, encoding="utf-8")
 
     if args.json:
-        print(json.dumps(result.__dict__, ensure_ascii=False, indent=2))
+        print(json.dumps({**result.__dict__, **verdict_fields(result.ok)}, ensure_ascii=False, indent=2))
     if args.markdown or not args.json:
         print(markdown)
     return 0 if result.ok else 1

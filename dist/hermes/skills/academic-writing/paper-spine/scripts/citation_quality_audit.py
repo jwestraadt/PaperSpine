@@ -706,7 +706,7 @@ def main() -> int:
             "output_dir": str(out_dir), "scene": report.scene,
             "verified": report.verified_count, "mismatched": report.mismatched_count,
             "dead": report.dead_count, "overall_score": report.overall_score,
-            "status": status, "error_count": report.error_count,
+            "status": status, "ok": not failures, "error_count": report.error_count,
             "pending_count": report.pending_count,
             "error_ratio": round(error_ratio, 4),
             "pending_ratio": round(pending_ratio, 4),

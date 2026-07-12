@@ -26,6 +26,9 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _paper_spine_utils import verdict_fields
+
 CROSSREF_QUERY_URL = "https://api.crossref.org/works"
 USER_AGENT = "PaperSpine/4.0 (citation-en; https://github.com/jwestraadt/PaperSpine)"
 
@@ -687,7 +690,7 @@ def main() -> int:
 
     if args.json:
         print(json.dumps({
-            "ok": result.ok,
+            **verdict_fields(result.ok),
             "total_candidates": result.total_candidates,
             "checked_count": result.checked_count,
             "matched_count": result.matched_count,

@@ -19,7 +19,7 @@ from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import table_rows
+from _paper_spine_utils import table_rows, verdict_fields
 
 USER_AGENT = "PaperSpine/4.0 (citation-zh; https://github.com/jwestraadt/PaperSpine)"
 # Exclude full-width CJK punctuation (U+3000-U+303F and U+FF00-U+FFEF) from the
@@ -190,7 +190,7 @@ def main() -> int:
     result = check_citation_bank_zh(out_dir)
 
     if args.json:
-        print(json.dumps({"ok": result.ok, "total": result.total, "verified": result.verified, "suspicious": result.suspicious, "incomplete": result.incomplete, "fake": result.fake}, ensure_ascii=False, indent=2))
+        print(json.dumps({**verdict_fields(result.ok), "total": result.total, "verified": result.verified, "suspicious": result.suspicious, "incomplete": result.incomplete, "fake": result.fake}, ensure_ascii=False, indent=2))
     if args.markdown or not args.json:
         print(to_markdown(result))
 
