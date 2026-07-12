@@ -70,7 +70,9 @@ Ingestion rules:
 
 ## Stage 2 — Three Parallel Specialist Sub-Agents
 
-Launch all three simultaneously. Each agent gets only its own context.
+Launch all three simultaneously. Each agent gets only its own context. Role
+cards with per-agent goals and limits: `agents/research-scene.md`,
+`agents/research-exemplar.md`, `agents/research-sota.md`.
 
 ### Agent A: Scene Analyst → `research_dossier.md`
 
