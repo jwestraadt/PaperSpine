@@ -27,7 +27,11 @@ in the user's manuscript. This is separate from exemplar learning.
 ## Rules
 
 - Generate at least `citation_target_count * 3` candidates (default: 60).
-- About 80% should be recent (2023 or later in 2026).
+- About 80% should be recent (`recent_threshold = current_year - 3`).
+- Mix the paper types: surveys/reviews, foundational works, benchmark/dataset
+  papers, application papers, and limitation/ethics papers — not one genre.
+- Every verified row must record a **stable identifier** (DOI, arXiv ID, or
+  URL) in the Verification Note, not just a claim that it was checked.
 - Each row pairs one paper with one or two support sentences.
 - Fill `Source Channel` for every row: `MCP-CNKI`, `MCP-IEEE`, `web`, `local`, `unknown`.
 - For external channels (`web`, `MCP-*`, `Crossref`, `PubMed`, `Scholar`,

@@ -38,6 +38,17 @@ Use `scripts/reference_inventory.py`:
 python scripts/reference_inventory.py . --output-dir paper_rewriting_output --mode local_first
 ```
 
+Ingestion rules:
+
+- `reference_mode` semantics: `local_first` scans the default folders
+  (`materials_dir`, `reference_materials/`, `references/`, `literature/`,
+  `papers/`) before any web/MCP collection; `specified_paths` indexes only
+  `reference_paths`; `web` may skip local indexing when no local files exist.
+- Source IDs are stable (`REF001`, `REF002`, …) — later stages cite them.
+- Local reference papers teach structure and rhetoric only. Do **not** treat
+  them as user evidence for this paper's results.
+- Never bypass paywalls or login restrictions to obtain a source.
+
 ## Stage 2 — Three Parallel Specialist Sub-Agents
 
 Launch all three simultaneously. Each agent gets only its own context.
