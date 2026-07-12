@@ -69,8 +69,10 @@ one table row per user source (draft section, figure, table, dataset, note)
 stating which planned sections and claims it can support. User materials only —
 external examples belong in `source_index.md`, never in `source_map.md`.
 
-Stop for user confirmation. Write `confirmed_motivation.md` only after the user
-chooses, revises, or writes their own motivation.
+Research ends with `motivation_options_after_research.md`. Do **not** stop for
+user confirmation here and do not write `confirmed_motivation.md` — that is
+Stage 4 (Motivation Confirmation), which runs after the citation support bank
+is built. The orchestrator presents the options and blocks there.
 
 ## Required Outputs
 
@@ -81,4 +83,6 @@ chooses, revises, or writes their own motivation.
 - `style_profile.md`
 - `sota_gap_map.md`
 - `motivation_options_after_research.md`
-- `confirmed_motivation.md` (after user confirmation)
+
+(`confirmed_motivation.md` is Stage 4's artifact, written only after the user
+chooses, revises, or writes their own motivation.)
