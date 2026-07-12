@@ -25,7 +25,8 @@ missing.
    contract, `contribution_check.py` must pass), then produce section
    blueprints, `writing_rationale_matrix.md`, and draft `final_paper/main.tex`.
    For journal/conference/competition scenes, map Results units to contribution
-   promises in `results_validation.md` per `references/results-validation.md`.
+   promises in `results_validation.md` (per `references/results-validation.md`)
+   before drafting the Results prose.
    Gates: `planning` (contract + blueprints + rationale), `drafting` (main.tex).
 7. Integrity audit: run `integrity_audit.py` and `artifact_check.py` to verify
    logic transfer, revision depth, artifact completeness, and intermediate
@@ -42,7 +43,9 @@ missing.
     stage has no `progress_check.py` gate; it runs only when the user supplies
     reviewer comments.
 12. Final audit: produce `reviewer_audit.md` per `references/reviewer-audit.md`
-    (three reviewer agents via `structured_review.py --dispatch`), then verify
+    (generate prompts with `structured_review.py --dispatch`, launch the three
+    review sub-agents per `review_prompts/dispatch.md`, check independence with
+    `--validate review_prompts`), then verify
     `citation_quality_audit.md`, `final_artifact_manifest.md`,
     `artifact_check.md`, the three keystone checks (contribution, results
     validation, reviewer audit), and the Word report before declaring complete.

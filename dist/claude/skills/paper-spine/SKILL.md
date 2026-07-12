@@ -259,9 +259,11 @@ and rationale matrix are mandatory — a paper without a documented design is no
 a PaperSpine paper.
 
 **Step 3 — Results-as-Validation (journal / conference / competition scenes).**
-Once drafting produces Results/Experiments content, read
+Before drafting any Results/Experiments prose, read
 `references/results-validation.md` and write `results_validation.md`, mapping
-every Results unit to a contribution promise. Run:
+every planned Results unit to a contribution promise — each subsection must be
+born tied to a claim, not back-filled afterwards. Once the Results units are
+drafted, run:
 ```bash
 python scripts/results_validation_check.py paper_rewriting_output --markdown --write
 ```
@@ -404,9 +406,12 @@ below must pass. If any command fails or reports missing/content issues, the
 workflow is not complete; return to the failing upstream stage.
 
 **First produce the reviewer audit (Reviewer-Aware hard rule).** Read
-`references/reviewer-audit.md`, dispatch the three reviewer agents with
-`python scripts/structured_review.py paper_rewriting_output --dispatch`, and
-fold their CRITICAL/MAJOR findings into the objection register of
+`references/reviewer-audit.md`. Generate the reviewer prompts with
+`python scripts/structured_review.py paper_rewriting_output --dispatch`, launch
+the three review sub-agents as instructed by `review_prompts/dispatch.md`,
+validate independence with
+`python scripts/structured_review.py paper_rewriting_output --validate review_prompts`,
+then fold the reviewers' CRITICAL/MAJOR findings into the objection register of
 `reviewer_audit.md`. The `final_audit` gate below runs `contribution_check.py`,
 `reviewer_audit_check.py`, and (journal/conference/competition scenes)
 `results_validation_check.py` — it cannot pass while any keystone artifact is
