@@ -18,6 +18,14 @@ outputs, and a paragraph-level writing rationale matrix.
 
 If any prerequisite is missing, return to the owning stage.
 
+## Contribution Contract First
+
+Before blueprints or any drafting, read `references/contribution.md`, write
+`confirmed_contribution.md` (all four sections), and run
+`python scripts/contribution_check.py paper_rewriting_output` until it exits 0.
+The `planning` gate requires this contract; every blueprint and matrix row must
+trace back to its Core contribution.
+
 ## Humanize Tier
 
 If `paper_spine_config.json` has `humanize_tier` set to `light`, `medium`, or
@@ -26,6 +34,7 @@ during all prose generation.
 
 ## Required Outputs
 
+- `confirmed_contribution.md` - the contribution contract (first, see above)
 - `original_logic_map.md` - map the existing manuscript in order
 - `evidence_bank.md`
 - `section_blueprints.md`

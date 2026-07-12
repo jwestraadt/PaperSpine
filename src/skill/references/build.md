@@ -15,6 +15,14 @@ same research, motivation, and rationale logic as the rewrite stage.
 - `citation_support_bank.md`
 - `confirmed_motivation.md`
 
+## Contribution Contract First
+
+Before blueprints or any drafting, read `references/contribution.md`, write
+`confirmed_contribution.md` (all four sections), and run
+`python scripts/contribution_check.py paper_rewriting_output` until it exits 0.
+The `planning` gate requires this contract; every blueprint and matrix row must
+trace back to its Core contribution.
+
 ## First Pass
 
 ```bash
@@ -30,6 +38,7 @@ If `humanize_tier` is set to `light`, `medium`, or `heavy`, read
 
 ## Required Outputs
 
+- `confirmed_contribution.md` (the contribution contract, first)
 - `source_inventory.md`, `evidence_bank.md`, `figure_asset_map.md`, `claim_register.md`
 - `section_blueprints.md`, `writing_rationale_matrix.md`
 - Manuscript draft
