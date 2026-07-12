@@ -26,6 +26,25 @@ before the user confirms the controlling motivation.
 - `flash`: 3 target-scene examples + 3 recent high-quality field/SOTA examples.
 - `pro`: 6 target-scene examples + 6 recent high-quality field/SOTA examples.
 
+## Scene Reference Files
+
+The "scene reference file" used by the sub-agents below is selected by the
+configured `scene` (note the underscore→hyphen conversion for `report_review`):
+
+| `scene` | Scene reference file |
+|---|---|
+| `journal` | `references/scenario-journal.md` |
+| `conference` | `references/scenario-conference.md` |
+| `report_review` | `references/scenario-report-review.md` |
+| `competition` | `references/scenario-competition.md` |
+
+When the target is a **named journal venue**, additionally apply
+`references/target-journal-research.md` and save
+`target_journal_research.md` — the logic-transfer audit consumes it. For
+`competition` and `report_review` scenes, apply
+`references/task-genre-research.md` for genre learning beyond the scene
+checklist (its output is `genre_research.md`).
+
 ## Stage 1 — Index Local References
 
 Create `paper_rewriting_output/reference_materials/source_index.md`:
