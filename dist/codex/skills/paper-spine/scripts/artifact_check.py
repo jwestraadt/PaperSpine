@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _paper_spine_utils import (
     markdown_tables,
+    read_config,
     year_from_row,
 )
 
@@ -314,13 +315,6 @@ def parse_args() -> argparse.Namespace:
         help="Write artifact_check.md into the output directory.",
     )
     return parser.parse_args()
-
-
-def read_config(output_dir: Path) -> dict[str, object]:
-    config_path = output_dir / "paper_spine_config.json"
-    if not config_path.exists():
-        return {}
-    return json.loads(config_path.read_text(encoding="utf-8-sig"))
 
 
 def detect_tex_engine() -> str:

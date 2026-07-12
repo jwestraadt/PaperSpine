@@ -15,6 +15,10 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from _paper_spine_utils import read_config
+
 
 @dataclass
 class StageDef:
@@ -165,16 +169,6 @@ def parse_args() -> argparse.Namespace:
         help="With --gate: treat config-dependent stages as required.",
     )
     return parser.parse_args()
-
-
-def _read_config(out_dir: Path) -> dict:
-    config_path = out_dir / "paper_spine_config.json"
-    if config_path.exists():
-        try:
-            return json.loads(config_path.read_text(encoding="utf-8-sig"))
-        except json.JSONDecodeError:
-            return {}
-    return {}
 
 
 def _artifact_exists(out_dir: Path, rel: str) -> bool:
@@ -428,7 +422,7 @@ def stage_skip_message(stage: StageDef) -> str:
 
 
 def gate_check(output_dir: Path, stage_key: str, require: bool = False) -> tuple[bool, str, list[str]]:
-    config = _read_config(output_dir)
+    config = read_config(output_dir)
     stage_def = next((s for s in STAGES if s.key == stage_key), None)
     if stage_def is None:
         return False, f"Unknown stage: {stage_key}", []
@@ -523,7 +517,7 @@ def check_progress(output_dir: Path) -> ProgressResult:
         result.findings.append("Output directory not found - begin from intake.")
         return result
 
-    config = _read_config(output_dir)
+    config = read_config(output_dir)
     result.misplaced_artifacts = detect_misplaced_artifacts(output_dir)
 
     first_pending: StageStatus | None = None

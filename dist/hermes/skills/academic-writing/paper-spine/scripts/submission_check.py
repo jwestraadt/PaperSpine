@@ -14,6 +14,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from xml.etree import ElementTree
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from _paper_spine_utils import read_config as _shared_read_config
+
 CITATION_PATTERNS = (
     re.compile(r"\\cite[a-zA-Z]*\s*\{"),
     re.compile(r"\[@[\w:.\-]+(?:\s*;\s*@[\w:.\-]+)*\]"),
@@ -119,17 +123,9 @@ def first_existing(output_dir: Path, names: tuple[str, ...]) -> Path | None:
 
 
 def read_config(output_dir: Path) -> dict[str, object]:
-    for candidate in (output_dir / "paper_spine_config.json", output_dir.parent / "paper_spine_config.json"):
-        if not candidate.exists():
-            continue
-        try:
-            # utf-8-sig tolerates a BOM (artifact_check/progress_check read the
-            # config this way, so BOM'd configs occur in this pipeline);
-            # UnicodeDecodeError guards against a non-UTF-8 (e.g. GBK) config.
-            return json.loads(candidate.read_text(encoding="utf-8-sig"))
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            return {}
-    return {}
+    # Submission materials may live beside the output dir, so also search the
+    # parent when the config is not found directly.
+    return _shared_read_config(output_dir, search_parent=True)
 
 
 def output_language(config: dict[str, object]) -> str:

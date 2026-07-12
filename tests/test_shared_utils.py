@@ -15,6 +15,7 @@ from _paper_spine_utils import (
     normalize_markdown,
     normalize_tex,
     preview,
+    read_config,
     read_text,
     similarity_canon,
     split_paragraphs,
@@ -23,6 +24,41 @@ from _paper_spine_utils import (
     table_rows,
     year_from_row,
 )
+
+
+class ReadConfigTests(unittest.TestCase):
+    def _dir_with_config(self, raw: bytes) -> Path:
+        out = Path(tempfile.mkdtemp()) / "paper_rewriting_output"
+        out.mkdir(parents=True)
+        (out / "paper_spine_config.json").write_bytes(raw)
+        return out
+
+    def test_bom_config_parses(self) -> None:
+        # Regression: integrity_audit/citation_quality_audit read the config
+        # as plain utf-8 and crashed with a JSONDecodeError on a Notepad-saved
+        # (BOM-prefixed) config inside the final-audit gate.
+        out = self._dir_with_config(b'\xef\xbb\xbf{"scene": "journal"}')
+        self.assertEqual(read_config(out), {"scene": "journal"})
+
+    def test_malformed_config_returns_empty(self) -> None:
+        out = self._dir_with_config(b'{"scene": "journal"')
+        self.assertEqual(read_config(out), {})
+
+    def test_non_dict_config_returns_empty(self) -> None:
+        out = self._dir_with_config(b'["not", "a", "config"]')
+        self.assertEqual(read_config(out), {})
+
+    def test_missing_config_returns_empty(self) -> None:
+        out = Path(tempfile.mkdtemp()) / "paper_rewriting_output"
+        out.mkdir(parents=True)
+        self.assertEqual(read_config(out), {})
+
+    def test_search_parent_falls_back(self) -> None:
+        out = self._dir_with_config(b'{"scene": "journal"}')
+        nested = out / "submission_package"
+        nested.mkdir()
+        self.assertEqual(read_config(nested), {})
+        self.assertEqual(read_config(nested, search_parent=True), {"scene": "journal"})
 
 
 class YearFromRowTests(unittest.TestCase):

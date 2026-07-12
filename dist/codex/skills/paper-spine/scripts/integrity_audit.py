@@ -27,6 +27,7 @@ if hasattr(sys.stderr, "reconfigure"):
 
 from _paper_spine_utils import (
     markdown_tables,
+    read_config,
 )
 
 # ---------------------------------------------------------------------------
@@ -87,10 +88,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def load_config(out_dir: Path) -> dict:
-    config_path = out_dir / "paper_spine_config.json"
-    if config_path.exists():
-        return json.loads(config_path.read_text(encoding="utf-8"))
-    return {}
+    return read_config(out_dir)
 
 
 # ---------------------------------------------------------------------------

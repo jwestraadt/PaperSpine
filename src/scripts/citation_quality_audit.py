@@ -29,7 +29,7 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
-from _paper_spine_utils import markdown_tables
+from _paper_spine_utils import markdown_tables, read_config
 
 DOI_RE = re.compile(
     r"\b(?:doi\s*[:=]\s*|https?://doi\.org/|https?://dx\.doi\.org/)?(10\.\d{4,}/[^\s,;)\]]+)",
@@ -409,10 +409,7 @@ def compute_recency_score(year: str | None, current_year: int = 2026) -> int:
 # ---------------------------------------------------------------------------
 
 def audit_citations(output_dir: Path, no_api: bool, timeout: int, delay: float, max_dois: int = 30) -> CitationQualityReport:
-    config_path = output_dir / "paper_spine_config.json"
-    config = {}
-    if config_path.exists():
-        config = json.loads(config_path.read_text(encoding="utf-8"))
+    config = read_config(output_dir)
 
     scene = config.get("scene", "journal")
     target_count = config.get("citation_target_count", 20)
