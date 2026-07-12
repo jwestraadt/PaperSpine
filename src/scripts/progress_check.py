@@ -68,6 +68,7 @@ STAGES: list[StageDef] = [
         "confirmed_motivation.md",
     ]),
     StageDef("planning", "Planning / Rationale Matrix", [
+        "confirmed_contribution.md",
         "section_blueprints.md",
         "writing_rationale_matrix.md",
     ]),

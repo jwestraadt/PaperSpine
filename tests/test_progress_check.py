@@ -98,6 +98,36 @@ class ProgressGateTests(unittest.TestCase):
         self.assertIn("contribution_check.py", res.stdout)
 
 
+class PlanningGateTests(unittest.TestCase):
+    def test_planning_gate_requires_contribution_contract(self) -> None:
+        # Contribution-First hard rule: blueprints and rationale matrix alone
+        # must not pass planning — confirmed_contribution.md is required before
+        # any drafting begins (previously it was only enforced at final audit).
+        out = _mkdir(
+            config={"workflow": "rewrite_existing"},
+            files={
+                "section_blueprints.md": "# Blueprints\n",
+                "writing_rationale_matrix.md": "# Matrix\n",
+            },
+        )
+        res = _gate(out, "planning")
+        self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
+        self.assertIn("confirmed_contribution.md", res.stdout)
+
+    def test_planning_gate_passes_with_contract(self) -> None:
+        out = _mkdir(
+            config={"workflow": "rewrite_existing"},
+            files={
+                "confirmed_contribution.md": "# Contribution Contract\n",
+                "section_blueprints.md": "# Blueprints\n",
+                "writing_rationale_matrix.md": "# Matrix\n",
+            },
+        )
+        res = _gate(out, "planning")
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        self.assertIn("GATE PASSED", res.stdout)
+
+
 class FinalAuditOfflineTests(unittest.TestCase):
     def test_citation_quality_audit_runs_structural_only(self) -> None:
         # The completion gate must be passable offline: citation_quality_audit

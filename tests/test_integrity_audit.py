@@ -58,6 +58,25 @@ class IntegrityAuditTests(unittest.TestCase):
         report = IntegrityAuditReport("test", [AuditDimension("A")])
         self.assertFalse(report.blocked)
 
+    def test_audit_artifacts_flags_missing_contribution_contract(self) -> None:
+        # Contribution-First: the artifact chain must name the contribution
+        # contract when it is the only missing link, so the audit routes the
+        # agent to references/contribution.md instead of passing silently.
+        complete = [
+            "research_dossier.md", "exemplar_learning_dossier.md",
+            "citation_support_bank.md", "confirmed_motivation.md",
+            "section_blueprints.md", "writing_rationale_matrix.md",
+            "original_logic_map.md", "evidence_bank.md",
+            "rewrite_matrix.md", "logic_transfer_audit.md",
+        ]
+        tmp = _make_out_dir(**{name: "content" for name in complete})
+        dim = audit_artifacts(tmp, {"workflow": "rewrite_existing"})
+        self.assertEqual(dim.status, "BLOCKED")
+        missing_mentions = [
+            f for f in dim.findings if "confirmed_contribution.md" in f.what_was_found
+        ]
+        self.assertEqual(len(missing_mentions), 1, [f.what_was_found for f in dim.findings])
+
     def test_audit_artifacts_detects_missing(self) -> None:
         tmp = _make_out_dir()
         tmp.joinpath("final_paper", "main.tex").write_text(r"\section{Test} text text text enough words for paragraphs", encoding="utf-8")
