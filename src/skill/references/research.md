@@ -62,12 +62,19 @@ Table: Candidate Contribution | What SOTA Already Does | User Evidence | Real Ga
 
 ## Stage 3 — Merge
 
-Produce `style_profile.md` and `motivation_options_after_research.md`. Stop for
-user confirmation. Write `confirmed_motivation.md` only after the user chooses,
-revises, or writes their own motivation.
+Produce `style_profile.md`, `motivation_options_after_research.md`, and
+`source_map.md`. `source_map.md` lives at the root of
+`paper_rewriting_output/` and maps the user's own materials to the manuscript:
+one table row per user source (draft section, figure, table, dataset, note)
+stating which planned sections and claims it can support. User materials only —
+external examples belong in `source_index.md`, never in `source_map.md`.
+
+Stop for user confirmation. Write `confirmed_motivation.md` only after the user
+chooses, revises, or writes their own motivation.
 
 ## Required Outputs
 
+- `source_map.md`
 - `reference_materials/source_index.md`
 - `research_dossier.md`
 - `exemplar_learning_dossier.md`

@@ -132,6 +132,6 @@ WHY a contract: if the abstract promises more than `Strong claims allowed`, the 
 ## How To Use It
 
 1. Draft `confirmed_contribution.md` filling all four sections; resolve `Evidence missing` honestly before locking the Core statement.
-2. Run `python src/scripts/contribution_check.py paper_rewriting_output` until it passes (exit 0).
+2. Run `python scripts/contribution_check.py paper_rewriting_output` until it passes (exit 0).
 3. Only then proceed to motivation thread, section blueprints, and writing — each tracing back to the Core contribution.
 4. Re-run the check whenever the claim or evidence changes; a shifted contribution invalidates downstream sections.

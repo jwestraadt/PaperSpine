@@ -15,6 +15,10 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from _paper_spine_utils import read_config
+
 
 @dataclass
 class StageDef:
@@ -167,16 +171,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _read_config(out_dir: Path) -> dict:
-    config_path = out_dir / "paper_spine_config.json"
-    if config_path.exists():
-        try:
-            return json.loads(config_path.read_text(encoding="utf-8-sig"))
-        except json.JSONDecodeError:
-            return {}
-    return {}
-
-
 def _artifact_exists(out_dir: Path, rel: str) -> bool:
     return (out_dir / rel).exists()
 
@@ -246,9 +240,11 @@ def _run_final_audit_gate(output_dir: Path, config: dict) -> tuple[bool, str, li
     if rc != 0:
         failures.append(f"integrity_audit.py exit {rc}")
 
-    # 4. citation_quality_audit.py
+    # 4. citation_quality_audit.py — structural analysis only (--no-api): the
+    #    completion gate must stay deterministic and passable offline. Live DOI
+    #    resolution belongs to the citation stage (citation_verification_en.py).
     rc, _stdout, _stderr = _run_script(
-        scripts_dir, "citation_quality_audit.py", [str(output_dir), "--write"]
+        scripts_dir, "citation_quality_audit.py", [str(output_dir), "--no-api", "--write"]
     )
     if rc != 0:
         failures.append(f"citation_quality_audit.py exit {rc}")
@@ -426,7 +422,7 @@ def stage_skip_message(stage: StageDef) -> str:
 
 
 def gate_check(output_dir: Path, stage_key: str, require: bool = False) -> tuple[bool, str, list[str]]:
-    config = _read_config(output_dir)
+    config = read_config(output_dir)
     stage_def = next((s for s in STAGES if s.key == stage_key), None)
     if stage_def is None:
         return False, f"Unknown stage: {stage_key}", []
@@ -521,7 +517,7 @@ def check_progress(output_dir: Path) -> ProgressResult:
         result.findings.append("Output directory not found - begin from intake.")
         return result
 
-    config = _read_config(output_dir)
+    config = read_config(output_dir)
     result.misplaced_artifacts = detect_misplaced_artifacts(output_dir)
 
     first_pending: StageStatus | None = None

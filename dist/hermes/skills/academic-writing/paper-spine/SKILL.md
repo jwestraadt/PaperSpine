@@ -196,15 +196,15 @@ Read `references/research.md` and execute the research stage. Research must
 index local references per `reference_mode` and `reference_paths` before
 any web collection.
 
-Required outputs: `reference_materials/source_index.md`, `research_dossier.md`,
-`exemplar_learning_dossier.md`, `style_profile.md`, `sota_gap_map.md`,
-`motivation_options_after_research.md`.
+Required outputs: `source_map.md`, `reference_materials/source_index.md`,
+`research_dossier.md`, `exemplar_learning_dossier.md`, `style_profile.md`,
+`sota_gap_map.md`, `motivation_options_after_research.md`.
 
 **Gate:**
 ```bash
 python scripts/progress_check.py paper_rewriting_output --gate research
 ```
-If FAILED: return to research. All six artifacts must exist before citation work begins.
+If FAILED: return to research. All seven artifacts must exist before citation work begins.
 
 ### Stage 3 — Citation Support Bank
 

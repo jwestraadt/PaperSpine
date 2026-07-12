@@ -98,6 +98,38 @@ class ProgressGateTests(unittest.TestCase):
         self.assertIn("contribution_check.py", res.stdout)
 
 
+class FinalAuditOfflineTests(unittest.TestCase):
+    def test_citation_quality_audit_runs_structural_only(self) -> None:
+        # The completion gate must be passable offline: citation_quality_audit
+        # is invoked with --no-api (structural analysis). Live DOI resolution
+        # belongs to the citation stage (citation_verification_en.py), not the
+        # final gate, which would otherwise fail every run without network.
+        from unittest import mock
+
+        sys.path.insert(0, str(ROOT / "src" / "scripts"))
+        try:
+            import progress_check
+        finally:
+            sys.path.remove(str(ROOT / "src" / "scripts"))
+
+        calls: list[tuple[str, list[str]]] = []
+
+        def fake_run(scripts_dir: Path, script_name: str, args: list[str]):
+            calls.append((script_name, args))
+            return 0, "", ""
+
+        out = _mkdir(config={"scene": "report", "word_output": "none"})
+        with mock.patch.object(progress_check, "_run_script", side_effect=fake_run):
+            ok, message, failures = progress_check._run_final_audit_gate(
+                out, {"scene": "report", "word_output": "none"}
+            )
+        self.assertTrue(ok, message)
+        self.assertEqual(failures, [])
+        cqa_calls = [args for name, args in calls if name == "citation_quality_audit.py"]
+        self.assertEqual(len(cqa_calls), 1, calls)
+        self.assertIn("--no-api", cqa_calls[0])
+
+
 class ProgressScanTests(unittest.TestCase):
     def test_missing_output_dir_reports_intake(self) -> None:
         tmp = Path(tempfile.mkdtemp()) / "does_not_exist"

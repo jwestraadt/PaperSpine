@@ -3,10 +3,34 @@
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 from pathlib import Path
+
+# — config reading ————————————————————————————————————————————————————————————
+
+def read_config(output_dir: Path, *, search_parent: bool = False) -> dict:
+    """Read paper_spine_config.json from *output_dir* (optionally its parent).
+
+    Tolerates a UTF-8 BOM (Notepad-saved configs occur in this pipeline) and
+    returns {} for a missing, non-UTF-8, or malformed file: gate scripts must
+    fail with their own diagnostics, never a JSON traceback.
+    """
+    candidates = [output_dir / "paper_spine_config.json"]
+    if search_parent:
+        candidates.append(output_dir.parent / "paper_spine_config.json")
+    for candidate in candidates:
+        if not candidate.exists():
+            continue
+        try:
+            data = json.loads(candidate.read_text(encoding="utf-8-sig"))
+        except (json.JSONDecodeError, UnicodeDecodeError, OSError):
+            return {}
+        return data if isinstance(data, dict) else {}
+    return {}
+
 
 # — file reading ————————————————————————————————————————————————————————————
 

@@ -90,7 +90,7 @@ Required before final writing whenever the paper has a Results/Experiments
 section. Validate with:
 
 ```text
-python src/scripts/results_validation_check.py paper_rewriting_output --markdown --write
+python scripts/results_validation_check.py paper_rewriting_output --markdown --write
 ```
 
 Exit 0 = every Results subsection validates a promise. Exit 1 = at least one
