@@ -19,7 +19,7 @@ from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import table_rows, verdict_fields
+from _paper_spine_utils import read_text, table_rows, verdict_fields
 
 USER_AGENT = "PaperSpine/4.0 (citation-zh; https://github.com/jwestraadt/PaperSpine)"
 # Exclude full-width CJK punctuation (U+3000-U+303F and U+FF00-U+FFEF) from the
@@ -102,7 +102,7 @@ def check_citation_bank_zh(out_dir: Path) -> CitationVerificationZHResult:
     if not bank_path.exists():
         return CitationVerificationZHResult(str(bank_path))
 
-    text = bank_path.read_text(encoding="utf-8", errors="ignore")
+    text = read_text(bank_path)
     _, rows = table_rows(text)
     if not rows:
         return CitationVerificationZHResult(str(bank_path))

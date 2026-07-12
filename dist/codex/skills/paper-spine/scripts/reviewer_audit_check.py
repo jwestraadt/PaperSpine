@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _paper_spine_utils import (
     SHORT_OK_MIN_CHARS,
     is_placeholder,
+    read_text,
     table_rows,
     verdict_fields,
 )
@@ -265,7 +266,7 @@ def validate(output_dir: Path) -> ReviewerAuditResult:
         result.missing_criteria = list(REQUIRED_CRITERIA)
         return result
 
-    text = path.read_text(encoding="utf-8", errors="ignore")
+    text = read_text(path)
 
     check_value_map(section_body(text, VALUE_MAP_HEADING), result)
     check_objection_register(section_body(text, OBJECTION_HEADING), result)

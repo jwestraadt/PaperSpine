@@ -31,6 +31,17 @@ from _paper_spine_utils import (
 )
 
 
+class ReadTextEncodingTests(unittest.TestCase):
+    def test_gb18030_chinese_is_preserved(self) -> None:
+        # Regression: checkers that read artifacts with errors="ignore" on utf-8
+        # silently dropped bytes from GB18030-encoded Chinese files. The shared
+        # read_text decodes GB18030 instead of losing the characters.
+        chinese = "深度学习综述：方法与评估的贡献映射"
+        tmp = Path(tempfile.mkdtemp()) / "bank.md"
+        tmp.write_bytes(chinese.encode("gb18030"))
+        self.assertEqual(read_text(tmp).strip(), chinese)
+
+
 class VerdictFieldsTests(unittest.TestCase):
     def test_pass_and_fail(self) -> None:
         self.assertEqual(verdict_fields(True), {"status": "PASS", "ok": True})

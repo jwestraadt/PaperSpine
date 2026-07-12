@@ -29,7 +29,7 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
-from _paper_spine_utils import find_citation_table, read_config
+from _paper_spine_utils import find_citation_table, read_config, read_text
 
 DOI_RE = re.compile(
     r"\b(?:doi\s*[:=]\s*|https?://doi\.org/|https?://dx\.doi\.org/)?(10\.\d{4,}/[^\s,;)\]]+)",
@@ -228,7 +228,7 @@ def extract_dois(text: str) -> list[str]:
 def parse_citation_rows(path: Path) -> list[dict[str, str]]:
     if not path.exists():
         return []
-    text = path.read_text(encoding="utf-8", errors="ignore")
+    text = read_text(path)
     header, rows = find_citation_table(text)
     if not rows:
         return []

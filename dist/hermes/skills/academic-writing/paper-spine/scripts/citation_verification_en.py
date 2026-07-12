@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _paper_spine_utils import table_rows, verdict_fields
+from _paper_spine_utils import read_text, table_rows, verdict_fields
 
 CROSSREF_QUERY_URL = "https://api.crossref.org/works"
 USER_AGENT = "PaperSpine/4.0 (citation-en; https://github.com/jwestraadt/PaperSpine)"
@@ -340,7 +340,7 @@ def verify_citation(
         result.findings.append(f"Bank file not found: {bank_path}")
         return result
 
-    text = bank_path.read_text(encoding="utf-8", errors="ignore")
+    text = read_text(bank_path)
     header, rows = table_rows(text)
     if not header:
         result.ok = False

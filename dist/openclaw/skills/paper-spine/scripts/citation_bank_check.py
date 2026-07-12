@@ -12,7 +12,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import find_citation_table, verdict_fields, year_from_row
+from _paper_spine_utils import (
+    find_citation_table,
+    read_text,
+    verdict_fields,
+    year_from_row,
+)
 
 CURRENT_YEAR = 2026
 DEFAULT_TARGET_COUNT = 20
@@ -68,7 +73,7 @@ def validate(path: Path, target_count: int, multiplier: int, recent_years: int, 
     if not path.exists():
         return CitationBankResult(str(path), False, target_count, required_candidates, 0, 0, required_recent_count, ["file does not exist"])
 
-    text = path.read_text(encoding="utf-8", errors="ignore")
+    text = read_text(path)
     header, rows = find_citation_table(text)
     if not header:
         findings.append("citation_support_bank.md must contain a Markdown table.")
