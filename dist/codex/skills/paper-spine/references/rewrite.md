@@ -65,6 +65,9 @@ section location.
 - Use `output_language` from config.
 - Select citations sentence by sentence from `citation_support_bank.md`.
 - `rewrite_matrix.md` maps original to final units, classifying each change.
+  Build it with `references/rewrite-matrix.md`; its final step produces
+  `logic_transfer_audit.md` via `references/logic-transfer-audit.md` — both
+  artifacts are required by the `rewrite_existing` gate.
 
 For a deeper, literature-informed pass — motivation-thread extraction,
 move-guided section rewrite, structural-coherence pass, and a numerical /

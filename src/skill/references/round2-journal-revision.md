@@ -9,7 +9,7 @@
 
 ## Phase 0: The Three R's — Corpus-Based Style Calibration
 
-The CASPArS method (Ohata, Martin & Ison, *J. Chem. Educ.*, 2025) calibrates writing at word, phrase, and structure level. Use the 3 deep-read journal papers as your corpus.
+The CASPArS method (Ohata, Martin & Ison, *J. Chem. Educ.*, 2025) calibrates writing at word, phrase, and structure level. Use the 3 deep-read journal papers as your corpus (deep-read method, Pass 1-3, and Templates A-H: `references/deep-reading.md`; JS templates: `references/journal-style-analysis.md`).
 
 **R1 — Recalibration**: Align word usage with field standards.
 - Compare your Round 1 draft against all 3 journal papers for each key term

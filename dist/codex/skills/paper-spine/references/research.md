@@ -84,6 +84,11 @@ Context: `tier`, `source_index.md`, scene reference path.
 
 Sections: Exemplar Inventory table, Structural Patterns, Rhetorical Patterns, Language Patterns.
 
+Full dossier schema, reading procedure, and the optional
+`paragraph_function_templates.md` / `result_narrative_templates.md` outputs
+(used by the rewrite matrix and logic-transfer audit):
+`references/exemplar-learning-dossier.md`.
+
 ### Agent C: SOTA Mapper → `sota_gap_map.md`
 
 Context: `tier`, `source_index.md`, `user_motivation` (if set).
@@ -93,7 +98,9 @@ Table: Candidate Contribution | What SOTA Already Does | User Evidence | Real Ga
 ## Stage 3 — Merge
 
 Produce `style_profile.md`, `motivation_options_after_research.md`, and
-`source_map.md`. `source_map.md` lives at the root of
+`source_map.md`. For the full `style_profile.md` schema, corpus metrics
+(`scripts/style_metrics.py`), and deep style imitation, read
+`references/style-learning-workflow.md`. `source_map.md` lives at the root of
 `paper_rewriting_output/` and maps the user's own materials to the manuscript:
 one table row per user source (draft section, figure, table, dataset, note)
 stating which planned sections and claims it can support. User materials only —

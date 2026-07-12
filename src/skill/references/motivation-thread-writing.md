@@ -31,13 +31,13 @@ Before building the motivation thread model, create or verify `paper_rewriting_o
 There are two allowed intake paths:
 
 1. If the user provides a clear motivation and confirms it, save it directly as `confirmed_motivation.md`.
-2. If the user does not provide one, infer 3-5 options from the draft and evidence, save `motivation_options.md`, and stop for user selection or editing.
+2. If the user does not provide one, infer 3-5 options from the draft and evidence, save `motivation_options_after_research.md`, and stop for user selection or editing.
 
-Do not proceed to section blueprints or manuscript rewriting while only `motivation_options.md` exists.
+Do not proceed to section blueprints or manuscript rewriting while only `motivation_options_after_research.md` exists.
 
 ## Motivation Options Template
 
-Save as `paper_rewriting_output/motivation_options.md` when motivation is absent or unclear.
+Save as `paper_rewriting_output/motivation_options_after_research.md` when motivation is absent or unclear.
 
 ```markdown
 # Motivation Options

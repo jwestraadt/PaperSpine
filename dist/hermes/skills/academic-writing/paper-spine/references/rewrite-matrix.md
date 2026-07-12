@@ -10,12 +10,18 @@ Do not rewrite by asking for "better prose." Rewrite by assigning each paragraph
 
 - User draft.
 - `confirmed_motivation.md` showing the user-confirmed controlling motivation.
-- `motivation_surface_map.md` showing how the motivation should appear in headings, topic sentences, transitions, and closure.
-- `paper_diagnosis.md` or equivalent argument diagnosis.
-- `original_logic_map.md` showing current section and paragraph logic.
+- `motivation_surface_map.md` (optional; produced via
+  `references/motivation-thread-writing.md` — fall back to
+  `confirmed_motivation.md` when absent) showing how the motivation should
+  appear in headings, topic sentences, transitions, and closure.
+- `original_logic_map.md` showing current section and paragraph logic — this
+  is the argument diagnosis.
 - `style_profile.md` if style imitation is requested.
-- `paragraph_function_templates.md` for section drafting.
-- `result_narrative_templates.md` for Results drafting.
+- `paragraph_function_templates.md` for section drafting (optional; produced
+  via `references/exemplar-learning-dossier.md` — fall back to the
+  Section-Level Learning tables in `exemplar_learning_dossier.md`).
+- `result_narrative_templates.md` for Results drafting (optional; same
+  producer and fallback as above).
 - `section_blueprints.md` for substantive rewrites.
 - `evidence_bank.md` for Results and Discussion.
 - Source map showing where data, claims, figures, and citations come from.
