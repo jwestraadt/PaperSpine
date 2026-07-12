@@ -88,11 +88,17 @@ Extract the final text from the compiled PDF or `.tex` file to `plain_text_paper
 ## Output Structure
 
 ```
-<paper_output_directory>/
-├── <main_tex_filename>.tex    # Main LaTeX document (the filled template)
-├── Fig/ or figures/            # Figure files
-├── reference.bib               # Bibliography
-├── [template files]            # cls, sty, bst files
-├── supplementary.tex           # If applicable
-└── paper_rewriting_output/     # All intermediate outputs
+paper_rewriting_output/
+├── ... (all intermediate workflow artifacts)
+└── final_paper/
+    ├── main.tex                # Main LaTeX document (the filled template)
+    ├── Fig/ or figures/        # Figure files
+    ├── references.bib          # Bibliography
+    ├── [template files]        # cls, sty, bst files
+    └── supplementary.tex       # If applicable
 ```
+
+`paper_rewriting_output/` is the workflow root; the assembled paper lives in
+`final_paper/` inside it. Never nest a `paper_rewriting_output/` inside the
+paper directory or create a sibling `final_paper/` — both are hard errors at
+the final audit.

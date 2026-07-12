@@ -8,5 +8,5 @@ Read `references/research.md` for the full stage playbook.
 
 **Table:** Candidate Contribution | What SOTA Already Does | User Evidence | Real Gap | Claim Strength | Risk
 
-**Limits:** Map at most 6 representative SOTA papers. ONE line per paper.
+**Limits:** Map at most 3 (flash) or 6 (pro) representative SOTA papers. ONE line per paper.
 Add a ## Gap Summary with the 2 most promising gaps.

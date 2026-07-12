@@ -33,12 +33,15 @@ and Clarity personas that drive `structured_review.py`. Run (or read the output
 of) those three agents, then fold their CRITICAL/MAJOR findings into the
 Objection Register. The mapping is direct:
 
-- **Methods & Reproducibility Reviewer** → objections about technical soundness,
+- **Methods & Reproducibility Reviewer** (role card:
+  `agents/reviewer-methods.md`) → objections about technical soundness,
   evidence sufficiency, reproducibility, missing ablations/baselines.
-- **Contribution Reviewer** → objections about novelty, significance,
-  differentiation from prior work, citation credibility.
-- **Clarity Reviewer** → objections about structure, unclear claims,
-  figure/table legibility, venue-convention violations.
+- **Contribution Reviewer** (role card: `agents/reviewer-contribution.md`) →
+  objections about novelty, significance, differentiation from prior work,
+  citation credibility.
+- **Clarity Reviewer** (role card: `agents/reviewer-clarity.md`) → objections
+  about structure, unclear claims, figure/table legibility, venue-convention
+  violations.
 
 This keeps the audit grounded in the project's existing review agents instead of
 producing a second, unanchored opinion. Each register row should trace back to a

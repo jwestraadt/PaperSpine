@@ -97,5 +97,53 @@ class StageMapTests(unittest.TestCase):
         )
 
 
+class ReferenceReachabilityTests(unittest.TestCase):
+    """Every playbook and agent card must be reachable from SKILL.md.
+
+    PR#4 wired or pruned ~19 orphaned reference files; this guard keeps new
+    playbooks from silently joining the skill without a `references/<name>.md`
+    link path from the orchestrator (and agent cards without an `agents/<name>`
+    mention in a reachable playbook).
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.skill_text = SKILL_MD.read_text(encoding="utf-8")
+
+    def test_every_reference_playbook_is_reachable_from_skill(self) -> None:
+        all_refs = {p.stem for p in REFERENCES.glob("*.md")}
+        seen: set[str] = set()
+        frontier = set(REF_LINK.findall(self.skill_text))
+        while frontier:
+            name = frontier.pop()
+            if name in seen or name not in all_refs:
+                continue
+            seen.add(name)
+            text = (REFERENCES / f"{name}.md").read_text(encoding="utf-8")
+            frontier |= set(REF_LINK.findall(text)) - seen
+        orphans = sorted(all_refs - seen)
+        self.assertEqual(
+            orphans,
+            [],
+            "reference playbooks with no references/<name>.md link path from "
+            f"SKILL.md — wire them in or delete them: {orphans}",
+        )
+
+    def test_every_agent_card_is_referenced_from_a_playbook(self) -> None:
+        agents_dir = ROOT / "src" / "skill" / "agents"
+        cards = sorted(p.name for p in agents_dir.glob("*.md"))
+        self.assertTrue(cards, "no agent role cards found")
+        corpus = self.skill_text + "\n".join(
+            p.read_text(encoding="utf-8") for p in REFERENCES.glob("*.md")
+        )
+        unreferenced = [c for c in cards if f"agents/{c}" not in corpus]
+        self.assertEqual(
+            unreferenced,
+            [],
+            "agent role cards never mentioned (as agents/<name>) by SKILL.md "
+            f"or any playbook: {unreferenced}",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

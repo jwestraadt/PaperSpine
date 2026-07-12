@@ -18,6 +18,10 @@ Ask these fields in order:
 9. Special requirements.
 10. Optional Word output: `none` or `docx`.
 11. Optional translated artifact package for English output: `none` or `zh`.
+12. Reference mode: `local_first` (default), `specified_paths`, or `web`.
+13. Reference paths: local reference folders/files (default `["."]`).
+14. Citation target count: integer (default `20`).
+15. Humanize tier: `none` (default), `light`, `medium`, or `heavy`.
 
 ## Supported Command-Line UI
 
@@ -33,6 +37,7 @@ the wizard runs in a real interactive terminal window:
 $launcher = @(
   "$env:USERPROFILE\.codex\skills\paper-spine\scripts\launch_paperspine_ui.ps1",
   "$env:USERPROFILE\.claude\skills\paper-spine\scripts\launch_paperspine_ui.ps1",
+  "$env:USERPROFILE\.openclaw\skills\paper-spine\scripts\launch_paperspine_ui.ps1",
   "$env:USERPROFILE\AppData\Local\hermes\skills\academic-writing\paper-spine\scripts\launch_paperspine_ui.ps1"
 ) | Where-Object { Test-Path $_ } | Select-Object -First 1
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File $launcher -OutputDir paper_rewriting_output
@@ -43,6 +48,7 @@ For a user-run terminal, the direct wizard command is:
 ```bash
 WIZARD="$HOME/.codex/skills/paper-spine/scripts/intake_wizard.py"
 [ -f "$WIZARD" ] || WIZARD="$HOME/.claude/skills/paper-spine/scripts/intake_wizard.py"
+[ -f "$WIZARD" ] || WIZARD="$HOME/.openclaw/skills/paper-spine/scripts/intake_wizard.py"
 python "$WIZARD" --output-dir paper_rewriting_output
 ```
 
@@ -56,6 +62,7 @@ For first-time setup or changing interface language:
 ```bash
 WIZARD="$HOME/.codex/skills/paper-spine/scripts/intake_wizard.py"
 [ -f "$WIZARD" ] || WIZARD="$HOME/.claude/skills/paper-spine/scripts/intake_wizard.py"
+[ -f "$WIZARD" ] || WIZARD="$HOME/.openclaw/skills/paper-spine/scripts/intake_wizard.py"
 python "$WIZARD" --setup-global --output-dir paper_rewriting_output
 ```
 
@@ -81,6 +88,10 @@ official_urls:
 special_requirements:
 word_output:
 translation_package:
+reference_mode:
+reference_paths:
+citation_target_count:
+humanize_tier:
 ```
 
-The JSON is the source of truth for later skills.
+The JSON is the source of truth for the later stages.

@@ -12,6 +12,9 @@
 ## Pre-Phase 0: Extract the Motivation Thread
 
 Before rewriting any text, extract the central motivation from the original draft.
+The full thread method and the `motivation_thread_model.md` /
+`motivation_surface_map.md` templates are in
+`references/motivation-thread-writing.md`.
 
 **Step 1 — Identify take-home messages.** Read the Discussion/Conclusion (if it exists) or the Abstract. List the 3-5 core claims. These are your "punchlines" (Montagnes et al.'s "writing backwards" method).
 
@@ -36,7 +39,7 @@ Before rewriting any text, extract the central motivation from the original draf
 
 ## Phase 1: Move-Guided Section Rewrite
 
-**Before starting**: Review Section 7 (Move Structure Consensus) from Cross-Paper Synthesis. Keep the "red thread" visible.
+**Before starting**: Review Section 7 (Move Structure Consensus) from Cross-Paper Synthesis. Keep the "red thread" visible. Template H, the deep-read passes, and the Cross-Paper Synthesis are defined in `references/deep-reading.md`.
 
 For each section, execute:
 

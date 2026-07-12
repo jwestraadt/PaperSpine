@@ -27,6 +27,36 @@ hard rule below).
 - `latex_report.md`
 - `final_artifact_manifest.md`
 
+`latex_report.md` template:
+
+```markdown
+# LaTeX Report
+
+## Guard Checks
+
+| Checkpoint | Errors | Warnings | Fixed? |
+|---|---:|---:|---|
+
+## Compilation
+
+- Engine:
+- Command:
+- Status:
+- First fatal error, if any:
+```
+
+If compilation fails, read the first fatal error in the log — do not blindly
+rewrite surrounding content. Common failure patterns:
+
+| Symptom | Likely Cause | Fix |
+|---|---|---|
+| Undefined control sequence | macro removed or package missing | compare with original preamble |
+| Undefined citation | citation key changed or missing in `.bib` | restore key or add verified bib entry |
+| Figure not found | path changed or graphicspath mismatch | restore file path or copy figure |
+| Runaway argument | unbalanced brace in prose or command | inspect nearby paragraph |
+| Misplaced alignment tab | unescaped `&` in prose | replace with `\&` |
+| Missing `$` inserted | math symbol used in text | wrap math or escape literal |
+
 ## Scripts
 
 ```bash

@@ -31,10 +31,7 @@ class SkillStructureTests(unittest.TestCase):
             "src/skill/SKILL.md",
             "src/skill/agents/openai.yaml",
             "src/skill/references/task-genre-research.md",
-            "src/skill/references/version-requirements.md",
             "src/skill/references/orchestrator-branch-map.md",
-            "src/skill/references/local-reference-ingestion.md",
-            "src/skill/references/citation-support-bank.md",
             "src/skill/references/writing-rationale-matrix.md",
             # Single-source scripts (B carry-overs).
             "src/scripts/latex_guard.py",

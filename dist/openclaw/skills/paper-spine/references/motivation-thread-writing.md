@@ -28,16 +28,19 @@ plan or the review process.)
 
 Before building the motivation thread model, create or verify `paper_rewriting_output/confirmed_motivation.md`. The user's confirmed motivation is the spine. Exemplar papers may teach rhetorical moves, but they must not choose the paper's motivation for the user.
 
-There are two allowed intake paths:
+In the standard pipeline, motivation options and confirmation belong to
+Stages 2–4 (research → citation → motivation confirmation), so
+`confirmed_motivation.md` normally already exists when this method runs during
+the rewrite stage. The intake paths below apply only when it does not:
 
 1. If the user provides a clear motivation and confirms it, save it directly as `confirmed_motivation.md`.
-2. If the user does not provide one, infer 3-5 options from the draft and evidence, save `motivation_options.md`, and stop for user selection or editing.
+2. If the user does not provide one, infer 3-5 options from the draft and evidence, save `motivation_options_after_research.md`, and stop for user selection or editing.
 
-Do not proceed to section blueprints or manuscript rewriting while only `motivation_options.md` exists.
+Do not proceed to section blueprints or manuscript rewriting while only `motivation_options_after_research.md` exists.
 
 ## Motivation Options Template
 
-Save as `paper_rewriting_output/motivation_options.md` when motivation is absent or unclear.
+Save as `paper_rewriting_output/motivation_options_after_research.md` when motivation is absent or unclear.
 
 ```markdown
 # Motivation Options

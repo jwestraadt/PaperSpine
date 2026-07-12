@@ -6,7 +6,7 @@ Use this reference when the user wants the manuscript to imitate excellent paper
 
 Convert a small full-text corpus into a reusable `style_profile.md`. The profile is the source of truth for later rewriting. Do not begin style imitation until the profile exists.
 
-For deep imitation, also read `deep-imitation-protocol.md` after this file.
+For deep imitation, also read `references/deep-imitation-protocol.md` after this file.
 
 ## Corpus Selection
 

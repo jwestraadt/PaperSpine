@@ -16,14 +16,19 @@ If these questions cannot be answered, the rewrite is not complete.
 ## Required Inputs
 
 - `source_map.md`
-- `target_journal_research.md` when a venue is named
-- `paper_diagnosis.md`
-- `original_logic_map.md`
+- `target_journal_research.md` when a venue is named (produced via
+  `references/target-journal-research.md`)
+- `original_logic_map.md` — the argument diagnosis
 - `exemplar_learning_dossier.md`
-- `paragraph_function_templates.md`
-- `result_narrative_templates.md` for Results rewriting
+- `paragraph_function_templates.md` (optional; produced via
+  `references/exemplar-learning-dossier.md` — fall back to
+  `exemplar_learning_dossier.md` when absent)
+- `result_narrative_templates.md` for Results rewriting (optional; same
+  producer and fallback as above)
 - `style_profile.md`
-- `motivation_thread_model.md`
+- `motivation_thread_model.md` (optional; produced via
+  `references/motivation-thread-writing.md` — fall back to
+  `confirmed_motivation.md` when absent)
 - `section_blueprints.md`
 - `rewrite_matrix.md`
 - original manuscript

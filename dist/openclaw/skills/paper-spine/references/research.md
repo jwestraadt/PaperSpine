@@ -26,6 +26,25 @@ before the user confirms the controlling motivation.
 - `flash`: 3 target-scene examples + 3 recent high-quality field/SOTA examples.
 - `pro`: 6 target-scene examples + 6 recent high-quality field/SOTA examples.
 
+## Scene Reference Files
+
+The "scene reference file" used by the sub-agents below is selected by the
+configured `scene` (note the underscore→hyphen conversion for `report_review`):
+
+| `scene` | Scene reference file |
+|---|---|
+| `journal` | `references/scenario-journal.md` |
+| `conference` | `references/scenario-conference.md` |
+| `report_review` | `references/scenario-report-review.md` |
+| `competition` | `references/scenario-competition.md` |
+
+When the target is a **named journal or conference venue**, additionally apply
+`references/target-journal-research.md` and save
+`target_journal_research.md` — the logic-transfer audit consumes it. For
+`competition` and `report_review` scenes, apply
+`references/task-genre-research.md` for genre learning beyond the scene
+checklist (its output is `genre_research.md`).
+
 ## Stage 1 — Index Local References
 
 Create `paper_rewriting_output/reference_materials/source_index.md`:
@@ -38,9 +57,23 @@ Use `scripts/reference_inventory.py`:
 python scripts/reference_inventory.py . --output-dir paper_rewriting_output --mode local_first
 ```
 
+Ingestion rules:
+
+- `reference_mode` semantics: `local_first` scans the default folders
+  (`materials_dir`, `reference_materials/`, `references/`, `literature/`,
+  `papers/`) before any web/MCP collection; `specified_paths` indexes only
+  `reference_paths`; `web` may skip local indexing when no local files exist.
+- Source IDs are stable (`REF001`, `REF002`, …) — later stages cite them.
+- Local references can support literature context, citation expansion, style
+  learning, and background claims. Do **not** treat them as user evidence for
+  this paper's results.
+- Never bypass paywalls or login restrictions to obtain a source.
+
 ## Stage 2 — Three Parallel Specialist Sub-Agents
 
-Launch all three simultaneously. Each agent gets only its own context.
+Launch all three simultaneously. Each agent gets only its own context. Role
+cards with per-agent goals and limits: `agents/research-scene.md`,
+`agents/research-exemplar.md`, `agents/research-sota.md`.
 
 ### Agent A: Scene Analyst → `research_dossier.md`
 
@@ -54,6 +87,11 @@ Context: `tier`, `source_index.md`, scene reference path.
 
 Sections: Exemplar Inventory table, Structural Patterns, Rhetorical Patterns, Language Patterns.
 
+Full dossier schema, reading procedure, and the optional
+`paragraph_function_templates.md` / `result_narrative_templates.md` outputs
+(used by the rewrite matrix and logic-transfer audit):
+`references/exemplar-learning-dossier.md`.
+
 ### Agent C: SOTA Mapper → `sota_gap_map.md`
 
 Context: `tier`, `source_index.md`, `user_motivation` (if set).
@@ -63,7 +101,9 @@ Table: Candidate Contribution | What SOTA Already Does | User Evidence | Real Ga
 ## Stage 3 — Merge
 
 Produce `style_profile.md`, `motivation_options_after_research.md`, and
-`source_map.md`. `source_map.md` lives at the root of
+`source_map.md`. For the full `style_profile.md` schema, corpus metrics
+(`scripts/style_metrics.py`), and deep style imitation, read
+`references/style-learning-workflow.md`. `source_map.md` lives at the root of
 `paper_rewriting_output/` and maps the user's own materials to the manuscript:
 one table row per user source (draft section, figure, table, dataset, note)
 stating which planned sections and claims it can support. User materials only —
