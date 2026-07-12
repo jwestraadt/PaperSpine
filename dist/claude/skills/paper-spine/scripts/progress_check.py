@@ -246,9 +246,11 @@ def _run_final_audit_gate(output_dir: Path, config: dict) -> tuple[bool, str, li
     if rc != 0:
         failures.append(f"integrity_audit.py exit {rc}")
 
-    # 4. citation_quality_audit.py
+    # 4. citation_quality_audit.py — structural analysis only (--no-api): the
+    #    completion gate must stay deterministic and passable offline. Live DOI
+    #    resolution belongs to the citation stage (citation_verification_en.py).
     rc, _stdout, _stderr = _run_script(
-        scripts_dir, "citation_quality_audit.py", [str(output_dir), "--write"]
+        scripts_dir, "citation_quality_audit.py", [str(output_dir), "--no-api", "--write"]
     )
     if rc != 0:
         failures.append(f"citation_quality_audit.py exit {rc}")
