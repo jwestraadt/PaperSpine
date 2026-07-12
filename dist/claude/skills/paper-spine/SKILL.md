@@ -37,6 +37,9 @@ stage from `references/` rather than requiring a separate skill invocation:
 | Citation | `references/citation.md` |
 | Rewrite | `references/rewrite.md` |
 | Build | `references/build.md` |
+| Contribution contract | `references/contribution.md` |
+| Results validation | `references/results-validation.md` |
+| Reviewer audit | `references/reviewer-audit.md` |
 | Humanize | `references/humanize.md` |
 | LaTeX | `references/latex.md` |
 | Translate | `references/translate.md` |
@@ -230,18 +233,42 @@ If `humanize_tier` is `light`, `medium`, or `heavy`, read
 
 ### Stage 6 — Writing / Drafting
 
+**Step 1 — Contribution contract (Contribution-First hard rule).** Read
+`references/contribution.md` and write `confirmed_contribution.md` (all four
+sections, no placeholders), confirming the contribution statement with the
+user. Run until it passes:
+```bash
+python scripts/contribution_check.py paper_rewriting_output
+```
+No blueprints, no drafting, before this contract exists.
+
+**Step 2 — Design and drafting.**
 If `workflow` is `rewrite_existing`, read `references/rewrite.md`.
 If `workflow` is `build_from_materials`, read `references/build.md`.
 
 Both workflows must create `section_blueprints.md` and
-`writing_rationale_matrix.md` before drafting.
+`writing_rationale_matrix.md` before drafting — every row tracing back to the
+Core contribution in the contract.
 
 **Gate:**
 ```bash
 python scripts/progress_check.py paper_rewriting_output --gate planning
 ```
-If FAILED: return to the writing stage. Blueprints and rationale matrix are
-mandatory — a paper without a documented design is not a PaperSpine paper.
+If FAILED: return to the writing stage. The contribution contract, blueprints,
+and rationale matrix are mandatory — a paper without a documented design is not
+a PaperSpine paper.
+
+**Step 3 — Results-as-Validation (journal / conference / competition scenes).**
+Before drafting any Results/Experiments prose, read
+`references/results-validation.md` and write `results_validation.md`, mapping
+every planned Results unit to a contribution promise — each subsection must be
+born tied to a claim, not back-filled afterwards. Once the Results units are
+drafted, run:
+```bash
+python scripts/results_validation_check.py paper_rewriting_output --markdown --write
+```
+Fix any metric-only unit (a result that validates no promise) before the
+integrity audit.
 
 ### Stage 7 — Integrity Audit
 
@@ -377,6 +404,18 @@ If the user requests review response / revision response, read
 Read `references/audit.md`. Before declaring the workflow complete, all checks
 below must pass. If any command fails or reports missing/content issues, the
 workflow is not complete; return to the failing upstream stage.
+
+**First produce the reviewer audit (Reviewer-Aware hard rule).** Read
+`references/reviewer-audit.md`. Generate the reviewer prompts with
+`python scripts/structured_review.py paper_rewriting_output --dispatch`, launch
+the three review sub-agents as instructed by `review_prompts/dispatch.md`,
+validate independence with
+`python scripts/structured_review.py paper_rewriting_output --validate review_prompts`,
+then fold the reviewers' CRITICAL/MAJOR findings into the objection register of
+`reviewer_audit.md`. The `final_audit` gate below runs `contribution_check.py`,
+`reviewer_audit_check.py`, and (journal/conference/competition scenes)
+`results_validation_check.py` — it cannot pass while any keystone artifact is
+missing or failing.
 
 ```bash
 python scripts/artifact_check.py paper_rewriting_output --markdown --write

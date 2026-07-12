@@ -101,6 +101,7 @@ ARTIFACT_OWNERS: dict[str, str] = {
     "exemplar_learning_dossier.md": "paper-spine-research",
     "citation_support_bank.md": "paper-spine-citation",
     "confirmed_motivation.md": "user confirmation (after paper-spine-research)",
+    "confirmed_contribution.md": "contribution contract (references/contribution.md, user-confirmed)",
     "section_blueprints.md": "paper-spine-rewrite / paper-spine-build",
     "writing_rationale_matrix.md": "paper-spine-rewrite / paper-spine-build",
     "original_logic_map.md": "paper-spine-rewrite",
@@ -115,6 +116,7 @@ ARTIFACT_DESCRIPTIONS: dict[str, str] = {
     "research_dossier.md": "target-scene norms, requirements, and format expectations",
     "citation_support_bank.md": "the verified pool of literature to draw from during writing",
     "confirmed_motivation.md": "the user-approved controlling idea the whole paper serves",
+    "confirmed_contribution.md": "the contribution contract every section must trace back to",
     "evidence_bank.md": "all user-provided evidence organized for claim support",
 }
 
@@ -125,8 +127,8 @@ def audit_artifacts(out_dir: Path, config: dict) -> AuditDimension:
     required = [
         "paper_spine_config.json", "research_dossier.md",
         "exemplar_learning_dossier.md", "citation_support_bank.md",
-        "confirmed_motivation.md", "section_blueprints.md",
-        "writing_rationale_matrix.md",
+        "confirmed_motivation.md", "confirmed_contribution.md",
+        "section_blueprints.md", "writing_rationale_matrix.md",
     ]
     if workflow == "rewrite_existing":
         required.extend(["original_logic_map.md", "evidence_bank.md", "rewrite_matrix.md", "logic_transfer_audit.md"])
