@@ -43,6 +43,48 @@ def read_text(path: Path) -> str:
     return path.read_text(errors="replace")
 
 
+# — gate cell validation ——————————————————————————————————————————————————————
+
+# Cell content that means "the decision was never made". Treated as a failure by
+# the methodology gates because an unfilled cell cannot govern the manuscript.
+PLACEHOLDER_PATTERNS = (
+    r"^\s*$",
+    r"^\s*todo\b",
+    r"^\s*tbd\b",
+    r"^\s*fixme\b",
+    r"^\s*xxx\b",
+    r"^\s*n/?a\b",
+    r"^\s*-+\s*$",
+    r"^\s*\.\.\.+\s*$",
+    r"^\s*<[^>]*>\s*$",      # <fill this in>
+    r"^\s*\[[^\]]*\]\s*$",   # [placeholder]
+    r"^\s*（?待填）?\s*$",
+    r"^\s*待定\s*$",
+    r"^\s*无\s*$",
+)
+
+# Minimum real characters for a content cell to count as "filled".
+MIN_CELL_CHARS = 12
+# Some fields are legitimately short category labels (e.g. "new theory"); for
+# these only emptiness/placeholder text fails, not the prose-length floor.
+SHORT_OK_MIN_CHARS = 4
+
+
+def is_placeholder(cell: str, min_chars: int = MIN_CELL_CHARS) -> bool:
+    """True if *cell* is empty, a template placeholder, or shorter than min_chars.
+
+    Shared by the three methodology gates (contribution / results-validation /
+    reviewer-audit) so a metric-only or label-only row cannot satisfy a gate.
+    """
+    value = cell.strip()
+    for pattern in PLACEHOLDER_PATTERNS:
+        if re.match(pattern, value, flags=re.IGNORECASE):
+            return True
+    # Strip Markdown emphasis/backticks before measuring real content length.
+    stripped = re.sub(r"[`*_~]", "", value).strip()
+    return len(stripped) < min_chars
+
+
 # — LaTeX / Markdown normalization ————————————————————————————————————————————
 
 def strip_tex_comments(text: str) -> str:

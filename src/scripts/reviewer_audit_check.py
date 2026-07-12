@@ -27,7 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import table_rows
+from _paper_spine_utils import SHORT_OK_MIN_CHARS, is_placeholder, table_rows
 
 # The six criteria are fixed because they are the axes nearly every venue's
 # review form scores. The audit is incomplete if any are missing.
@@ -148,15 +148,21 @@ def check_value_map(body: str | None, result: ReviewerAuditResult) -> None:
         result.findings.append("Reviewer Value Map section has no table rows.")
         result.missing_criteria = list(REQUIRED_CRITERIA)
         return
-    # First-column text of every row, lowercased, for criterion matching.
-    first_cells = " \n ".join(row[0].lower() for row in rows if row)
     found: list[str] = []
     missing: list[str] = []
+    thin: list[str] = []
     for criterion in REQUIRED_CRITERIA:
-        if criterion in first_cells:
-            found.append(criterion)
-        else:
+        row = next((r for r in rows if r and criterion in r[0].lower()), None)
+        if row is None:
             missing.append(criterion)
+            continue
+        found.append(criterion)
+        # The criterion label alone is not a score. Require real content in the
+        # cells beyond column 0 (what reviewers want / our evidence / weakness /
+        # revision action) so a six-row label-only table cannot pass.
+        content = " ".join(cell for cell in row[1:]).strip()
+        if is_placeholder(content):
+            thin.append(criterion)
     result.found_criteria = found
     result.missing_criteria = missing
     if missing:
@@ -165,7 +171,13 @@ def check_value_map(body: str | None, result: ReviewerAuditResult) -> None:
             + ", ".join(missing)
             + ". All six criteria must each have a row."
         )
-    else:
+    if thin:
+        result.findings.append(
+            "Reviewer Value Map rows are label-only (no scoring content) for: "
+            + ", ".join(thin)
+            + ". Fill in what reviewers want, our evidence, the weakness, and the revision action."
+        )
+    if not missing and not thin:
         result.value_map_ok = True
 
 
@@ -204,12 +216,14 @@ def check_objection_register(body: str | None, result: ReviewerAuditResult) -> N
     usable = 0
     for row in rows:
         if sev_idx < len(row) and fix_idx < len(row):
-            if row[sev_idx].strip() and row[fix_idx].strip():
+            sev_ok = not is_placeholder(row[sev_idx], SHORT_OK_MIN_CHARS)
+            fix_ok = not is_placeholder(row[fix_idx])
+            if sev_ok and fix_ok:
                 usable += 1
     if usable == 0:
         result.findings.append(
-            "Reviewer Objection Register has rows but none carry BOTH a Severity "
-            "and a Preemptive fix. At least one complete row is required."
+            "Reviewer Objection Register has rows but none carry BOTH a real Severity "
+            "and a concrete Preemptive fix. At least one complete row is required."
         )
         return
     result.objection_register_ok = True
@@ -222,16 +236,17 @@ def check_editorial_fit(body: str | None, result: ReviewerAuditResult) -> None:
             "value, and desk-reject risks."
         )
         return
-    # Non-empty means it has real content beyond whitespace and the table/heading
-    # scaffolding — at least one line of prose or a bullet.
+    # Real content beyond whitespace and table/heading scaffolding. Require a
+    # substantive block (>= 40 real chars) so a one-word stub cannot pass; the
+    # section is meant to cover venue fit, editor value, and desk-reject risks.
     meaningful = [
         ln.strip() for ln in body.splitlines()
         if ln.strip() and not set(ln.strip()) <= {"-", ":", "|", " "}
     ]
-    if not meaningful:
+    if is_placeholder(" ".join(meaningful), min_chars=40):
         result.findings.append(
-            "Editorial Fit Map section is empty. Add venue fit, editor-facing "
-            "value, and desk-reject risks."
+            "Editorial Fit Map section is empty or too thin. Add venue fit, "
+            "editor-facing value, and desk-reject risks."
         )
         return
     result.editorial_fit_ok = True

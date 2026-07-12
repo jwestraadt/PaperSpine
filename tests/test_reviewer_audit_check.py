@@ -91,6 +91,42 @@ class ReviewerAuditCheckTests(unittest.TestCase):
         self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
         self.assertIn("venue fit", res.stdout.lower())
 
+    def test_label_only_value_map_fails(self) -> None:
+        # Six criterion rows whose only content is the label -> no real scoring.
+        label_only = (
+            "## Reviewer Value Map\n\n"
+            "| Reviewer criterion | What reviewers want | Our evidence | Current weakness | Revision action |\n"
+            "|---|---|---|---|---|\n"
+            "| Novelty |  |  |  |  |\n"
+            "| Significance |  |  |  |  |\n"
+            "| Technical soundness |  |  |  |  |\n"
+            "| Evidence sufficiency |  |  |  |  |\n"
+            "| Clarity |  |  |  |  |\n"
+            "| Venue fit |  |  |  |  |\n"
+        )
+        out = _write_audit(_doc(label_only, OBJECTION, EDITORIAL))
+        res = _run(out)
+        self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
+        self.assertIn("label-only", res.stdout.lower())
+
+    def test_placeholder_objection_row_fails(self) -> None:
+        # Severity/fix cells present but placeholder ('x' / '-') -> not a real row.
+        bad_objection = (
+            "## Reviewer Objection Register\n\n"
+            "| Likely objection | Where triggered | Severity | Preemptive fix |\n"
+            "|---|---|---|---|\n"
+            "| Some objection | Sec. 1 | x | - |\n"
+        )
+        out = _write_audit(_doc(VALUE_MAP, bad_objection, EDITORIAL))
+        res = _run(out)
+        self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
+
+    def test_thin_editorial_fit_fails(self) -> None:
+        thin_editorial = "## Editorial Fit Map\n\n- ok\n"
+        out = _write_audit(_doc(VALUE_MAP, OBJECTION, thin_editorial))
+        res = _run(out)
+        self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
+
     def test_objection_without_severity_and_fix_fails(self) -> None:
         # Objection register present but the row carries neither Severity nor fix.
         bad_objection = (

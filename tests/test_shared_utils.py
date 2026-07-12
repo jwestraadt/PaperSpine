@@ -7,8 +7,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src" / "scripts"))
 from _paper_spine_utils import (
+    MIN_CELL_CHARS,
+    SHORT_OK_MIN_CHARS,
     CanonParagraph,
     canonical,
+    is_placeholder,
     is_separator_row,
     make_canon,
     markdown_tables,
@@ -24,6 +27,34 @@ from _paper_spine_utils import (
     table_rows,
     year_from_row,
 )
+
+
+class IsPlaceholderTests(unittest.TestCase):
+    def test_empty_and_whitespace_are_placeholders(self) -> None:
+        self.assertTrue(is_placeholder(""))
+        self.assertTrue(is_placeholder("   "))
+
+    def test_template_tokens_are_placeholders(self) -> None:
+        for token in ("TODO", "tbd", "N/A", "-", "...", "[fill]", "<x>", "待定"):
+            self.assertTrue(is_placeholder(token), token)
+
+    def test_short_content_is_placeholder_by_default(self) -> None:
+        # Below MIN_CELL_CHARS real characters -> placeholder.
+        self.assertTrue(is_placeholder("x"))
+        self.assertTrue(is_placeholder("too short"))  # 9 < 12
+
+    def test_short_ok_min_lets_labels_through(self) -> None:
+        # Category labels pass the lower floor but empty/placeholder still fails.
+        self.assertFalse(is_placeholder("MAJOR", SHORT_OK_MIN_CHARS))
+        self.assertTrue(is_placeholder("x", SHORT_OK_MIN_CHARS))
+
+    def test_real_prose_passes(self) -> None:
+        self.assertFalse(is_placeholder("a concrete, filled-in decision cell"))
+
+    def test_markdown_emphasis_stripped_before_measuring(self) -> None:
+        # `**x**` has only one real char after stripping emphasis -> placeholder.
+        self.assertTrue(is_placeholder("**x**"))
+        self.assertGreater(MIN_CELL_CHARS, SHORT_OK_MIN_CHARS)
 
 
 class ReadConfigTests(unittest.TestCase):

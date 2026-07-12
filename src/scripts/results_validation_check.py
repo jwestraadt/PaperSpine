@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import read_text, table_rows
+from _paper_spine_utils import is_placeholder, read_text, table_rows
 
 # Column -> substrings that identify its header cell (case-insensitive).
 CLAIM_TERMS = ("contribution claim", "claim tested", "contribution")
@@ -118,16 +118,20 @@ def validate(results_path: Path) -> ResultsValidationResult:
         claim = _cell(row, claim_idx) if claim_idx >= 0 else ""
         evidence = _cell(row, evidence_idx) if evidence_idx >= 0 else ""
 
-        if not claim:
+        claim_ok = not is_placeholder(claim)
+        evidence_ok = not is_placeholder(evidence)
+        if not claim_ok:
             findings.append(
-                f"{label}: empty `Contribution Claim Tested` — a metric-only row that validates no "
-                "contribution promise. Map it to a contribution (C1, C2, ...) or cut the subsection."
+                f"{label}: empty or placeholder `Contribution Claim Tested` — a metric-only row that "
+                "validates no contribution promise. Map it to a contribution (C1, C2, ...) or cut the "
+                "subsection."
             )
-        if not evidence:
+        if not evidence_ok:
             findings.append(
-                f"{label}: empty `Result/Evidence` — a contribution claim with no result behind it."
+                f"{label}: empty or placeholder `Result/Evidence` — a contribution claim with no "
+                "concrete result behind it."
             )
-        if claim and evidence:
+        if claim_ok and evidence_ok:
             mapped_rows += 1
 
         if allowed_idx >= 0 and not _cell(row, allowed_idx):
