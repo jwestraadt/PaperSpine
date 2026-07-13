@@ -31,6 +31,12 @@ Collect workflow options and write validated configuration before any substantiv
 | `reference_paths` | list of local paths | `["."]` |
 | `citation_target_count` | integer | `20` |
 | `humanize_tier` | `none`, `light`, `medium`, `heavy` | `none` |
+| `ui_language` | `en`, `zh` | `en` |
+| `detection_platform` | `cnki`, `weipu`, `general` | `general` |
+
+Advanced optional fields (rarely set by hand; see SKILL.md's Required
+Configuration for consumers): `reviewer_persona`, `humanize_thresholds`,
+`max_sections`, `submission_requested`.
 
 ## UI
 

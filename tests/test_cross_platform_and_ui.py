@@ -54,6 +54,10 @@ class CodexSingleEntryTests(unittest.TestCase):
             result = subprocess.run(
                 [
                     sys.executable, "src/scripts/sync_local_installs.py", "--clean-legacy",
+                    # Build dist in the tempdir too: rebuilding the repo's own
+                    # dist/ here silently healed committed drift before the
+                    # dist-freshness guards in later test modules could see it.
+                    "--dist-dir", str(base / "dist"),
                     "--desktop-root", str(base / "desktop"),
                     "--codex-skills-dir", str(base / "codex" / "skills"),
                     "--codex-prompts-dir", str(base / "codex" / "prompts"),
@@ -67,8 +71,9 @@ class CodexSingleEntryTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
 
-            # dist/codex/skills must contain exactly one 'paper-spine' folder, nothing else.
-            dist_codex = ROOT / "dist" / "codex" / "skills"
+            # The built codex skills dir must contain exactly one 'paper-spine'
+            # folder, nothing else.
+            dist_codex = base / "dist" / "codex" / "skills"
             dist_skill_dirs = sorted(p.name for p in dist_codex.iterdir() if p.is_dir())
             self.assertEqual(dist_skill_dirs, [SKILL_NAME], f"dist codex skills: {dist_skill_dirs}")
 
