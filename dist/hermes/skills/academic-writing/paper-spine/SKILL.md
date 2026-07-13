@@ -145,6 +145,18 @@ Required fields:
 | `citation_target_count` | integer; default `20` |
 | `humanize_tier` | `none`, `light`, `medium`, `heavy` |
 
+Optional fields (written by the intake wizard or read by gate scripts when
+present; absent means the default):
+
+| Field | Allowed Values | Used by |
+|---|---|---|
+| `ui_language` | `en` (default), `zh` | user-facing communication language (see User-Facing Language above) |
+| `detection_platform` | `cnki`, `weipu`, `general` (default) | humanize stage platform reference selection |
+| `reviewer_persona` | string, or dict keyed `methods`/`contribution`/`clarity` | `structured_review.py` reviewer personas |
+| `humanize_thresholds` | dict of dimension thresholds | `humanize_check.py` threshold overrides |
+| `max_sections` | integer; default `6` | `section_economy_check.py` via the final audit |
+| `submission_requested` | boolean; default `false` | `progress_check.py` submission stage detection |
+
 ## Non-Negotiable Route
 
 **Resume-first rule:** Before starting any workflow, read
