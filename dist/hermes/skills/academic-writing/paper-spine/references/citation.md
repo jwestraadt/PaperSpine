@@ -55,7 +55,9 @@ in the user's manuscript. This is separate from exemplar learning.
    every row.
 2. **Verification pass:** Verify every external-source row and fill `Verified`
    plus `Verification Note`. Run `citation_quality_audit.py` and
-   `citation_verification_en.py` where applicable.
+   `citation_verification_en.py` where applicable; when `output_language` is
+   `zh` (or the bank carries Chinese references), also run
+   `citation_verification_zh.py` for the Chinese-format checks.
 3. **Curation:** Keep only rows that are usable for drafting. Do not proceed to
    planning/drafting while external-source rows still have blank or placeholder
    verification fields.
@@ -66,4 +68,11 @@ in the user's manuscript. This is separate from exemplar learning.
 python scripts/citation_bank_check.py paper_rewriting_output/citation_support_bank.md --target-count 20 --markdown
 python scripts/citation_quality_audit.py paper_rewriting_output --write
 python scripts/citation_verification_en.py paper_rewriting_output/citation_support_bank.md --markdown --write
+```
+
+For `output_language=zh` runs (note: takes the output directory, not the bank
+file path):
+
+```bash
+python scripts/citation_verification_zh.py paper_rewriting_output --markdown --write
 ```
