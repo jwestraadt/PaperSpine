@@ -369,8 +369,9 @@ python scripts/word_guard.py paper_rewriting_output/final_paper/paper.zh.docx --
 ```bash
 python scripts/progress_check.py paper_rewriting_output --gate word --require
 ```
-Use `--require` so the gate checks Word even when config says `none` — the file
-should exist and be valid. If `word_output` is explicitly `none`, skip this gate.
+One rule: if `word_output` is explicitly `none`, skip this gate entirely (the
+user opted out). Otherwise run it with `--require` so the gate demands the
+docx/report pair rather than passing vacuously.
 
 ### Stage 9 — Translation Package (if applicable)
 
@@ -511,7 +512,8 @@ Write workflow artifacts under `paper_rewriting_output/`.
 `figure_asset_map.md`, `claim_register.md`, manuscript draft.
 
 **Final artifacts:** `latex_report.md`, `final_artifact_manifest.md`,
-`final_paper/main.tex`, `final_paper/paper.pdf` (when TeX available),
+`final_paper/main.tex`, `final_paper/main.pdf` + its current copy
+`final_paper/paper.pdf` (when TeX available),
 `final_paper/paper.docx` + `word_report.md` (standard; skip only if
 `word_output` is explicitly `none`),
 `final_paper/paper.zh.docx` + `word_report.zh.md` (when `output_language=zh`
