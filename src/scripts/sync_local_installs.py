@@ -55,6 +55,12 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Generate and install single-skill PaperSpine.")
     p.add_argument("--dist-only", action="store_true", help="Only regenerate dist/ from src/. No install.")
     p.add_argument("--clean-legacy", action="store_true", help="Remove legacy 12-skill worker dirs from installs.")
+    p.add_argument(
+        "--dist-dir", type=Path, default=DIST,
+        help="Where to build the dist tree (default: the repo's dist/). When "
+             "overridden, the repo's plugin.json/marketplace.json are NOT "
+             "version-stamped — tests use this to avoid mutating repo state.",
+    )
     p.add_argument("--claude-skills-dir", type=Path, default=home / ".claude" / "skills")
     p.add_argument("--claude-commands-dir", type=Path, default=home / ".claude" / "commands")
     p.add_argument("--codex-skills-dir", type=Path, default=home / ".codex" / "skills")
@@ -120,20 +126,23 @@ def build_skill_tree(dest: Path, *, hermes: bool = False) -> None:
     copy_scripts(dest / "scripts")
 
 
-def build_dist() -> None:
-    """Regenerate the whole dist/ tree from src/ (idempotent)."""
+def build_dist(dist: Path = DIST) -> None:
+    """Regenerate the whole dist tree at *dist* from src/ (idempotent)."""
     for host in ("claude", "codex", "openclaw"):
-        build_skill_tree(DIST / host / "skills" / SKILL_NAME)
-    build_skill_tree(DIST / "hermes" / "skills" / HERMES_CATEGORY / SKILL_NAME, hermes=True)
+        build_skill_tree(dist / host / "skills" / SKILL_NAME)
+    build_skill_tree(dist / "hermes" / "skills" / HERMES_CATEGORY / SKILL_NAME, hermes=True)
     # adapters
-    cc = DIST / "claude" / "commands"
+    cc = dist / "claude" / "commands"
     cc.mkdir(parents=True, exist_ok=True)
     shutil.copy2(SRC_ADAPTERS / "claude" / "commands" / "paperspine.md", cc / "paperspine.md")
-    cp = DIST / "codex" / "prompts"
+    cp = dist / "codex" / "prompts"
     cp.mkdir(parents=True, exist_ok=True)
     shutil.copy2(SRC_ADAPTERS / "codex" / "prompts" / "paperspine.md", cp / "paperspine.md")
-    sync_version_from_canonical()
-    print(f"Dist regenerated from src/: {DIST}")
+    # Version-stamp the repo manifests only when building the repo's own dist:
+    # a foreign --dist-dir build (tests) must not mutate committed repo files.
+    if dist == DIST:
+        sync_version_from_canonical()
+    print(f"Dist regenerated from src/: {dist}")
 
 
 def sync_version_from_canonical() -> None:
@@ -169,19 +178,20 @@ def clean_legacy(args: argparse.Namespace) -> None:
 
 
 def install(args: argparse.Namespace) -> None:
+    dist = args.dist_dir
     for src_host, dest in (
-        (DIST / "claude" / "skills" / SKILL_NAME, args.claude_skills_dir / SKILL_NAME),
-        (DIST / "codex" / "skills" / SKILL_NAME, args.codex_skills_dir / SKILL_NAME),
-        (DIST / "openclaw" / "skills" / SKILL_NAME, args.openclaw_skills_dir / SKILL_NAME),
-        (DIST / "hermes" / "skills" / HERMES_CATEGORY / SKILL_NAME,
+        (dist / "claude" / "skills" / SKILL_NAME, args.claude_skills_dir / SKILL_NAME),
+        (dist / "codex" / "skills" / SKILL_NAME, args.codex_skills_dir / SKILL_NAME),
+        (dist / "openclaw" / "skills" / SKILL_NAME, args.openclaw_skills_dir / SKILL_NAME),
+        (dist / "hermes" / "skills" / HERMES_CATEGORY / SKILL_NAME,
          args.hermes_skills_dir / HERMES_CATEGORY / SKILL_NAME),
     ):
         if src_host.exists():
             copy_tree(src_host, dest)
     args.claude_commands_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(DIST / "claude" / "commands" / "paperspine.md", args.claude_commands_dir / "paperspine.md")
+    shutil.copy2(dist / "claude" / "commands" / "paperspine.md", args.claude_commands_dir / "paperspine.md")
     args.codex_prompts_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(DIST / "codex" / "prompts" / "paperspine.md", args.codex_prompts_dir / "paperspine.md")
+    shutil.copy2(dist / "codex" / "prompts" / "paperspine.md", args.codex_prompts_dir / "paperspine.md")
 
 
 def write_install_state(args: argparse.Namespace) -> None:
@@ -200,7 +210,7 @@ def write_install_state(args: argparse.Namespace) -> None:
 
 def main() -> int:
     args = parse_args()
-    build_dist()
+    build_dist(args.dist_dir)
     if args.dist_only:
         return 0
     if args.clean_legacy:
