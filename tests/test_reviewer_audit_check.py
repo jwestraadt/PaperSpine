@@ -127,6 +127,18 @@ class ReviewerAuditCheckTests(unittest.TestCase):
         res = _run(out)
         self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
 
+    def test_short_bulleted_editorial_passes(self) -> None:
+        # reviewer-audit.md: "a short bulleted block is fine" — a concise but
+        # real three-aspect block must not be rejected by a length floor.
+        short_editorial = (
+            "## Editorial Fit Map\n\n"
+            "- Fits venue Y\n- Clear editor value\n- No desk-reject risks\n"
+        )
+        out = _write_audit(_doc(VALUE_MAP, OBJECTION, short_editorial))
+        res = _run(out)
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        self.assertIn("Status: PASS", res.stdout)
+
     def test_gb18030_chinese_content_passes(self) -> None:
         # Regression: the checker read the artifact with errors="ignore" on utf-8,
         # so a GB18030-encoded audit lost its Chinese content bytes, emptied the

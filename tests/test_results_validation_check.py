@@ -88,6 +88,18 @@ class ResultsValidationCheckTests(unittest.TestCase):
         self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
         self.assertIn("Result/Evidence", res.stdout)
 
+    def test_terse_concrete_cells_pass(self) -> None:
+        # A bare contribution ID + a short concrete number are valid content;
+        # the gate must not impose a prose-length floor on them.
+        terse_row = (
+            "| 4.2 Accuracy | C1 | AUC 0.92 | Table 2 | matched budget "
+            "| Improves accuracy on X | Do NOT claim general superiority |\n"
+        )
+        out = _write_results("# Results Validation\n\n" + HEADER + terse_row)
+        res = _run(out)
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        self.assertIn("Status: PASS", res.stdout)
+
     def test_evidence_column_titled_result_is_resolved(self) -> None:
         # Regression: the bare "result" term substring-matched the "Results
         # Unit" header, so an evidence column titled just "Result" bound to the

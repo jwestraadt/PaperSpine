@@ -28,7 +28,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _paper_spine_utils import (
-    SHORT_OK_MIN_CHARS,
     is_placeholder,
     read_text,
     table_rows,
@@ -165,9 +164,10 @@ def check_value_map(body: str | None, result: ReviewerAuditResult) -> None:
         found.append(criterion)
         # The criterion label alone is not a score. Require real content in the
         # cells beyond column 0 (what reviewers want / our evidence / weakness /
-        # revision action) so a six-row label-only table cannot pass.
+        # revision action) so a six-row label-only table cannot pass. A low floor
+        # keeps terse (incl. CJK) but real scoring content valid.
         content = " ".join(cell for cell in row[1:]).strip()
-        if is_placeholder(content):
+        if is_placeholder(content, min_chars=2):
             thin.append(criterion)
     result.found_criteria = found
     result.missing_criteria = missing
@@ -222,8 +222,10 @@ def check_objection_register(body: str | None, result: ReviewerAuditResult) -> N
     usable = 0
     for row in rows:
         if sev_idx < len(row) and fix_idx < len(row):
-            sev_ok = not is_placeholder(row[sev_idx], SHORT_OK_MIN_CHARS)
-            fix_ok = not is_placeholder(row[fix_idx])
+            # Reject empty/placeholder/lone-char cells but accept terse real
+            # values: a Severity label ("MAJOR", CJK "严重") and a concise fix.
+            sev_ok = not is_placeholder(row[sev_idx], min_chars=2)
+            fix_ok = not is_placeholder(row[fix_idx], min_chars=2)
             if sev_ok and fix_ok:
                 usable += 1
     if usable == 0:
@@ -242,14 +244,14 @@ def check_editorial_fit(body: str | None, result: ReviewerAuditResult) -> None:
             "value, and desk-reject risks."
         )
         return
-    # Real content beyond whitespace and table/heading scaffolding. Require a
-    # substantive block (>= 40 real chars) so a one-word stub cannot pass; the
-    # section is meant to cover venue fit, editor value, and desk-reject risks.
+    # Real content beyond whitespace and table/heading scaffolding, so a
+    # one-word stub cannot pass. A modest floor honors reviewer-audit.md's
+    # "a short bulleted block is fine" (and keeps CJK blocks valid).
     meaningful = [
         ln.strip() for ln in body.splitlines()
         if ln.strip() and not set(ln.strip()) <= {"-", ":", "|", " "}
     ]
-    if is_placeholder(" ".join(meaningful), min_chars=40):
+    if is_placeholder(" ".join(meaningful), min_chars=12):
         result.findings.append(
             "Editorial Fit Map section is empty or too thin. Add venue fit, "
             "editor-facing value, and desk-reject risks."

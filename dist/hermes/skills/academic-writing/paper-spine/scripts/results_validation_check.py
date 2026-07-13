@@ -118,8 +118,12 @@ def validate(results_path: Path) -> ResultsValidationResult:
         claim = _cell(row, claim_idx) if claim_idx >= 0 else ""
         evidence = _cell(row, evidence_idx) if evidence_idx >= 0 else ""
 
-        claim_ok = not is_placeholder(claim)
-        evidence_ok = not is_placeholder(evidence)
+        # Reject empty, placeholder tokens (TODO/-/N/A/…), and lone single
+        # characters — but NOT terse concrete content: a claim can be a bare
+        # contribution ID ("C1") and evidence a short number ("AUC 0.92"), and
+        # 12 chars is a long CJK phrase, so no prose-length floor here.
+        claim_ok = not is_placeholder(claim, min_chars=2)
+        evidence_ok = not is_placeholder(evidence, min_chars=2)
         if not claim_ok:
             findings.append(
                 f"{label}: empty or placeholder `Contribution Claim Tested` — a metric-only row that "
