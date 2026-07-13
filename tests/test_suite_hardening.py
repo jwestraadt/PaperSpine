@@ -143,14 +143,56 @@ class SingleSkillDistTests(unittest.TestCase):
         self.assertEqual(out_of_sync, [], f"dist copies out of sync with src: {out_of_sync}")
         self.assertGreater(checked, 0, "no dist copies discovered")
 
+    def test_dist_skill_md_matches_src_source_of_truth(self) -> None:
+        """The orchestrator itself must not drift: every dist SKILL.md tracks src.
+
+        The sources set above deliberately excludes SKILL.md (hermes gets a
+        frontmatter overlay), which used to let an edited src/skill/SKILL.md
+        leave all four dist hosts consistently stale while the suite passed.
+        Plain hosts must match src byte-for-byte; hermes must match modulo the
+        frontmatter block.
+        """
+        src_text = read("src/skill/SKILL.md")
+        for host in ("claude", "codex", "openclaw"):
+            copy = read(f"dist/{host}/skills/{SKILL_NAME}/SKILL.md")
+            self.assertEqual(
+                copy, src_text,
+                f"dist/{host} SKILL.md is stale — regenerate with sync_local_installs.py --dist-only",
+            )
+        hermes = read(f"dist/hermes/skills/{HERMES_CATEGORY}/{SKILL_NAME}/SKILL.md")
+        self.assertEqual(
+            strip_frontmatter(hermes).strip(),
+            strip_frontmatter(src_text).strip(),
+            "dist/hermes SKILL.md body is stale — regenerate with sync_local_installs.py --dist-only",
+        )
+
 
 class DistOnlyIdempotencyTests(unittest.TestCase):
     def test_dist_only_regenerates_and_is_idempotent(self) -> None:
-        """`--dist-only` regenerates dist/; a second run leaves file bytes unchanged."""
+        """`--dist-only` regenerates dist/; a second run leaves file bytes unchanged.
+
+        The committed dist/ must ALREADY equal the regenerated one. Without the
+        before-vs-after assertion, this test silently healed a stale committed
+        dist/ in the workspace before the byte-parity tests ran (test classes
+        execute alphabetically, and this class sorts before them), so committed
+        drift was never caught by a full suite run.
+        """
+        before = snapshot_tree(ROOT / "dist")
+
         first = run_sync("--dist-only")
         self.assertEqual(first.returncode, 0, first.stderr + first.stdout)
         after_first = snapshot_tree(ROOT / "dist")
         self.assertIn("claude/skills/paper-spine/SKILL.md", after_first)
+
+        self.assertEqual(
+            sorted(before), sorted(after_first),
+            "committed dist/ file set is stale — regenerate with sync_local_installs.py --dist-only and commit",
+        )
+        stale = [k for k in after_first if before.get(k) != after_first[k]]
+        self.assertEqual(
+            stale, [],
+            f"committed dist/ bytes were stale (src edited without regenerating): {stale}",
+        )
 
         second = run_sync("--dist-only")
         self.assertEqual(second.returncode, 0, second.stderr + second.stdout)

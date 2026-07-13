@@ -84,6 +84,26 @@ class SkillStructureTests(unittest.TestCase):
         plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
         self.assertEqual(plugin["version"], "4.0.0")
 
+    def test_marketplace_version_matches_canonical(self) -> None:
+        # sync_local_installs propagates dist/paperspine_version.json to
+        # marketplace.json plugin entries; this was previously unverified, so a
+        # version bump could ship a stale marketplace manifest.
+        import json
+
+        canonical = json.loads(
+            (ROOT / "dist" / "paperspine_version.json").read_text(encoding="utf-8")
+        )["version"]
+        marketplace = json.loads(
+            (ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8")
+        )
+        plugins = marketplace.get("plugins", [])
+        self.assertTrue(plugins, "marketplace.json has no plugin entries")
+        for plugin in plugins:
+            self.assertEqual(
+                plugin.get("version"), canonical,
+                f"marketplace plugin {plugin.get('name')} version drifted from canonical",
+            )
+
     def test_root_skill_is_absent_to_avoid_duplicate_codex_discovery(self) -> None:
         self.assertFalse((ROOT / "SKILL.md").exists())
 
