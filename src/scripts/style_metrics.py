@@ -17,6 +17,9 @@ from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _paper_spine_utils import read_text
+
 SUPPORTED_SUFFIXES = {".txt", ".md", ".tex"}
 
 STOPWORDS = {
@@ -99,13 +102,6 @@ class DocumentMetrics:
     connectors: dict[str, int]
 
 
-def read_text(path: Path) -> str:
-    for encoding in ("utf-8", "utf-8-sig", "gb18030", "latin-1"):
-        try:
-            return path.read_text(encoding=encoding)
-        except UnicodeDecodeError:
-            continue
-    return path.read_text(errors="replace")
 
 
 def iter_input_files(paths: Iterable[Path]) -> list[Path]:

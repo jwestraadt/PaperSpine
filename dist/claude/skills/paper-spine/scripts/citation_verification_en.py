@@ -26,37 +26,15 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _paper_spine_utils import read_text, table_rows, verdict_fields
+
 CROSSREF_QUERY_URL = "https://api.crossref.org/works"
 USER_AGENT = "PaperSpine/4.0 (citation-en; https://github.com/jwestraadt/PaperSpine)"
 
 # Title similarity threshold for a "matched" verdict
 MIN_TITLE_SIMILARITY = 0.6
 YEAR_TOLERANCE = 1  # ±1 year
-
-
-# ---------------------------------------------------------------------------
-# table helpers (self-contained, same idiom as humanize_check.py)
-# ---------------------------------------------------------------------------
-
-def _split_table_line(line: str) -> list[str]:
-    return [c.strip() for c in line.strip().strip("|").split("|")]
-
-
-def _is_sep(cells: list[str]) -> bool:
-    return bool(cells) and all(c and set(c) <= {"-", ":", " "} for c in cells)
-
-
-def _table_rows(text: str) -> tuple[list[str], list[list[str]]]:
-    rows: list[list[str]] = []
-    for raw in text.splitlines():
-        line = raw.strip()
-        if not (line.startswith("|") and line.endswith("|")):
-            continue
-        cells = _split_table_line(line)
-        if _is_sep(cells):
-            continue
-        rows.append(cells)
-    return (rows[0], rows[1:]) if rows else ([], [])
 
 
 def _col_index(header: list[str], *names: str) -> int | None:
@@ -362,8 +340,8 @@ def verify_citation(
         result.findings.append(f"Bank file not found: {bank_path}")
         return result
 
-    text = bank_path.read_text(encoding="utf-8", errors="ignore")
-    header, rows = _table_rows(text)
+    text = read_text(bank_path)
+    header, rows = table_rows(text)
     if not header:
         result.ok = False
         result.findings.append("No parseable table found in citation_support_bank.md")
@@ -687,7 +665,7 @@ def main() -> int:
 
     if args.json:
         print(json.dumps({
-            "ok": result.ok,
+            **verdict_fields(result.ok),
             "total_candidates": result.total_candidates,
             "checked_count": result.checked_count,
             "matched_count": result.matched_count,

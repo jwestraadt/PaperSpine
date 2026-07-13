@@ -27,7 +27,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import table_rows
+from _paper_spine_utils import (
+    is_placeholder,
+    read_text,
+    table_rows,
+    verdict_fields,
+)
 
 # The six criteria are fixed because they are the axes nearly every venue's
 # review form scores. The audit is incomplete if any are missing.
@@ -148,15 +153,22 @@ def check_value_map(body: str | None, result: ReviewerAuditResult) -> None:
         result.findings.append("Reviewer Value Map section has no table rows.")
         result.missing_criteria = list(REQUIRED_CRITERIA)
         return
-    # First-column text of every row, lowercased, for criterion matching.
-    first_cells = " \n ".join(row[0].lower() for row in rows if row)
     found: list[str] = []
     missing: list[str] = []
+    thin: list[str] = []
     for criterion in REQUIRED_CRITERIA:
-        if criterion in first_cells:
-            found.append(criterion)
-        else:
+        row = next((r for r in rows if r and criterion in r[0].lower()), None)
+        if row is None:
             missing.append(criterion)
+            continue
+        found.append(criterion)
+        # The criterion label alone is not a score. Require real content in the
+        # cells beyond column 0 (what reviewers want / our evidence / weakness /
+        # revision action) so a six-row label-only table cannot pass. A low floor
+        # keeps terse (incl. CJK) but real scoring content valid.
+        content = " ".join(cell for cell in row[1:]).strip()
+        if is_placeholder(content, min_chars=2):
+            thin.append(criterion)
     result.found_criteria = found
     result.missing_criteria = missing
     if missing:
@@ -165,7 +177,13 @@ def check_value_map(body: str | None, result: ReviewerAuditResult) -> None:
             + ", ".join(missing)
             + ". All six criteria must each have a row."
         )
-    else:
+    if thin:
+        result.findings.append(
+            "Reviewer Value Map rows are label-only (no scoring content) for: "
+            + ", ".join(thin)
+            + ". Fill in what reviewers want, our evidence, the weakness, and the revision action."
+        )
+    if not missing and not thin:
         result.value_map_ok = True
 
 
@@ -204,12 +222,16 @@ def check_objection_register(body: str | None, result: ReviewerAuditResult) -> N
     usable = 0
     for row in rows:
         if sev_idx < len(row) and fix_idx < len(row):
-            if row[sev_idx].strip() and row[fix_idx].strip():
+            # Reject empty/placeholder/lone-char cells but accept terse real
+            # values: a Severity label ("MAJOR", CJK "严重") and a concise fix.
+            sev_ok = not is_placeholder(row[sev_idx], min_chars=2)
+            fix_ok = not is_placeholder(row[fix_idx], min_chars=2)
+            if sev_ok and fix_ok:
                 usable += 1
     if usable == 0:
         result.findings.append(
-            "Reviewer Objection Register has rows but none carry BOTH a Severity "
-            "and a Preemptive fix. At least one complete row is required."
+            "Reviewer Objection Register has rows but none carry BOTH a real Severity "
+            "and a concrete Preemptive fix. At least one complete row is required."
         )
         return
     result.objection_register_ok = True
@@ -222,16 +244,17 @@ def check_editorial_fit(body: str | None, result: ReviewerAuditResult) -> None:
             "value, and desk-reject risks."
         )
         return
-    # Non-empty means it has real content beyond whitespace and the table/heading
-    # scaffolding — at least one line of prose or a bullet.
+    # Real content beyond whitespace and table/heading scaffolding, so a
+    # one-word stub cannot pass. A modest floor honors reviewer-audit.md's
+    # "a short bulleted block is fine" (and keeps CJK blocks valid).
     meaningful = [
         ln.strip() for ln in body.splitlines()
         if ln.strip() and not set(ln.strip()) <= {"-", ":", "|", " "}
     ]
-    if not meaningful:
+    if is_placeholder(" ".join(meaningful), min_chars=12):
         result.findings.append(
-            "Editorial Fit Map section is empty. Add venue fit, editor-facing "
-            "value, and desk-reject risks."
+            "Editorial Fit Map section is empty or too thin. Add venue fit, "
+            "editor-facing value, and desk-reject risks."
         )
         return
     result.editorial_fit_ok = True
@@ -245,7 +268,7 @@ def validate(output_dir: Path) -> ReviewerAuditResult:
         result.missing_criteria = list(REQUIRED_CRITERIA)
         return result
 
-    text = path.read_text(encoding="utf-8", errors="ignore")
+    text = read_text(path)
 
     check_value_map(section_body(text, VALUE_MAP_HEADING), result)
     check_objection_register(section_body(text, OBJECTION_HEADING), result)
@@ -297,7 +320,7 @@ def main() -> int:
         print(f"Wrote {report_path}", file=sys.stderr)
 
     if args.json:
-        print(json.dumps(result.__dict__, ensure_ascii=False, indent=2))
+        print(json.dumps({**result.__dict__, **verdict_fields(result.ok)}, ensure_ascii=False, indent=2))
     if args.markdown or not args.json:
         print(markdown)
     return 0 if result.ok else 1

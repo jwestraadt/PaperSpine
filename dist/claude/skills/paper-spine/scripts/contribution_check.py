@@ -19,33 +19,19 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paper_spine_utils import read_text, table_rows
+from _paper_spine_utils import (
+    MIN_CELL_CHARS,
+    SHORT_OK_MIN_CHARS,
+    is_placeholder,
+    read_text,
+    table_rows,
+    verdict_fields,
+)
 
 ARTIFACT_NAME = "confirmed_contribution.md"
 
-# Cell content that means "the decision was never made". Treated as a failure
-# because an unfilled cell cannot govern the downstream manuscript.
-PLACEHOLDER_PATTERNS = (
-    r"^\s*$",
-    r"^\s*todo\b",
-    r"^\s*tbd\b",
-    r"^\s*fixme\b",
-    r"^\s*xxx\b",
-    r"^\s*n/?a\b",
-    r"^\s*-+\s*$",
-    r"^\s*\.\.\.+\s*$",
-    r"^\s*<[^>]*>\s*$",      # <fill this in>
-    r"^\s*\[[^\]]*\]\s*$",   # [placeholder]
-    r"^\s*（?待填）?\s*$",
-    r"^\s*待定\s*$",
-    r"^\s*无\s*$",
-)
-
-# Minimum real characters for a content cell to count as "filled".
-MIN_CELL_CHARS = 12
 # Some fields are legitimately short category labels (e.g. "new theory"); for
 # these only emptiness/placeholder text fails, not the prose-length floor.
-SHORT_OK_MIN_CHARS = 4
 SHORT_OK_FIELDS = frozenset({"contribution type"})
 
 # The four required sections. Each is matched by keyword against ## headings, and
@@ -121,16 +107,6 @@ def parse_args() -> argparse.Namespace:
 
 def _normalize(text: str) -> str:
     return " ".join(text.strip().lower().split())
-
-
-def is_placeholder(cell: str, min_chars: int = MIN_CELL_CHARS) -> bool:
-    value = cell.strip()
-    for pattern in PLACEHOLDER_PATTERNS:
-        if re.match(pattern, value, flags=re.IGNORECASE):
-            return True
-    # Strip Markdown emphasis/backticks before measuring real content length.
-    stripped = re.sub(r"[`*_~]", "", value).strip()
-    return len(stripped) < min_chars
 
 
 def split_sections(text: str) -> dict[str, str]:
@@ -280,7 +256,7 @@ def main() -> int:
         (output_dir / "contribution_check.md").write_text(markdown, encoding="utf-8")
 
     if args.json:
-        print(json.dumps(result.__dict__, ensure_ascii=False, indent=2))
+        print(json.dumps({**result.__dict__, **verdict_fields(result.ok)}, ensure_ascii=False, indent=2))
     if args.markdown or not args.json:
         print(markdown)
     return 0 if result.ok else 1

@@ -28,6 +28,7 @@ if hasattr(sys.stderr, "reconfigure"):
 from _paper_spine_utils import (
     markdown_tables,
     read_config,
+    verdict_fields,
 )
 
 # ---------------------------------------------------------------------------
@@ -610,6 +611,7 @@ def main() -> int:
     if args.json:
         output = {
             "output_dir": str(out_dir),
+            **verdict_fields(not report.blocked),
             "blocked": report.blocked,
             "total_findings": report.total_findings,
             "dimensions": [

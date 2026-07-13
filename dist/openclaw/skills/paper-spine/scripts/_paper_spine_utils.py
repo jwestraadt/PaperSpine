@@ -43,6 +43,60 @@ def read_text(path: Path) -> str:
     return path.read_text(errors="replace")
 
 
+# — gate cell validation ——————————————————————————————————————————————————————
+
+# Cell content that means "the decision was never made". Treated as a failure by
+# the methodology gates because an unfilled cell cannot govern the manuscript.
+PLACEHOLDER_PATTERNS = (
+    r"^\s*$",
+    r"^\s*todo\b",
+    r"^\s*tbd\b",
+    r"^\s*fixme\b",
+    r"^\s*xxx\b",
+    r"^\s*n/?a\b",
+    r"^\s*-+\s*$",
+    r"^\s*\.\.\.+\s*$",
+    r"^\s*<[^>]*>\s*$",      # <fill this in>
+    r"^\s*\[[^\]]*\]\s*$",   # [placeholder]
+    r"^\s*（?待填）?\s*$",
+    r"^\s*待定\s*$",
+    r"^\s*无\s*$",
+)
+
+# Minimum real characters for a content cell to count as "filled".
+MIN_CELL_CHARS = 12
+# Some fields are legitimately short category labels (e.g. "new theory"); for
+# these only emptiness/placeholder text fails, not the prose-length floor.
+SHORT_OK_MIN_CHARS = 4
+
+
+def is_placeholder(cell: str, min_chars: int = MIN_CELL_CHARS) -> bool:
+    """True if *cell* is empty, a template placeholder, or shorter than min_chars.
+
+    Shared by the three methodology gates (contribution / results-validation /
+    reviewer-audit) so a metric-only or label-only row cannot satisfy a gate.
+    """
+    value = cell.strip()
+    for pattern in PLACEHOLDER_PATTERNS:
+        if re.match(pattern, value, flags=re.IGNORECASE):
+            return True
+    # Strip Markdown emphasis/backticks before measuring real content length.
+    stripped = re.sub(r"[`*_~]", "", value).strip()
+    return len(stripped) < min_chars
+
+
+# — JSON verdict —————————————————————————————————————————————————————————————
+
+def verdict_fields(ok: bool) -> dict:
+    """The canonical pass/fail verdict every checker's --json output carries.
+
+    Returns both a machine field (`ok`: bool) and a human token
+    (`status`: "PASS"/"FAIL") so consumers can key off either without guessing
+    per-script conventions (`blocked`, bare arrays, missing keys, …).
+    """
+    return {"status": "PASS" if ok else "FAIL", "ok": bool(ok)}
+
+
 # — LaTeX / Markdown normalization ————————————————————————————————————————————
 
 def strip_tex_comments(text: str) -> str:
@@ -183,3 +237,20 @@ def year_from_row(row: list[str]) -> int | None:
     # because CJK ideographs are word characters, so \b would reject it.
     years = [int(value) for value in re.findall(r"(?<!\d)(19\d{2}|20\d{2})(?!\d)", joined)]
     return max(years) if years else None
+
+
+def find_citation_table(text: str) -> tuple[list[str], list[list[str]]]:
+    """Return (header, data_rows) for the first citation-support-bank table.
+
+    Identifies the bank by a header that carries a reference token plus `claim`
+    and `sentence` columns; returns ([], []) when no such table is present.
+    """
+    for table in markdown_tables(text):
+        if not table:
+            continue
+        header = table[0]
+        header_text = " ".join(cell.lower() for cell in header)
+        has_reference = any(term in header_text for term in ("citation", "reference", "bibtex"))
+        if has_reference and "claim" in header_text and "sentence" in header_text:
+            return header, table[1:]
+    return [], []

@@ -15,6 +15,9 @@ import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _paper_spine_utils import read_text, strip_tex_comments, verdict_fields
+
 GRAPHIC_EXTENSIONS = [".pdf", ".png", ".jpg", ".jpeg", ".eps", ".tif", ".tiff"]
 
 
@@ -24,26 +27,6 @@ class Finding:
     check: str
     message: str
     line: int | None = None
-
-
-def read_text(path: Path) -> str:
-    for encoding in ("utf-8", "utf-8-sig", "gb18030", "latin-1"):
-        try:
-            return path.read_text(encoding=encoding)
-        except UnicodeDecodeError:
-            continue
-    return path.read_text(errors="replace")
-
-
-def strip_comments(text: str) -> str:
-    lines = []
-    for line in text.splitlines():
-        cut = None
-        for match in re.finditer(r"(?<!\\)%", line):
-            cut = match.start()
-            break
-        lines.append(line if cut is None else line[:cut])
-    return "\n".join(lines)
 
 
 def line_number(text: str, offset: int) -> int:
@@ -346,7 +329,7 @@ def check_citation_linkage(text: str, bib_keys: set[str]) -> list[Finding]:
 
 def run_checks(tex_path: Path, bib_path: Path | None) -> list[Finding]:
     raw = read_text(tex_path)
-    text = strip_comments(raw)
+    text = strip_tex_comments(raw)
     bib_keys = parse_bib_keys(bib_path)
     findings: list[Finding] = []
     findings.extend(check_document_markers(text))
@@ -402,12 +385,17 @@ def main(argv: list[str]) -> int:
         return 2
 
     findings = run_checks(args.tex.resolve(), args.bib.resolve() if args.bib else None)
+    has_error = any(item.severity == "error" for item in findings)
     if args.json:
-        print(json.dumps([asdict(item) for item in findings], indent=2, ensure_ascii=False))
+        print(json.dumps(
+            {**verdict_fields(not has_error), "findings": [asdict(item) for item in findings]},
+            indent=2,
+            ensure_ascii=False,
+        ))
     else:
         print(render_markdown(args.tex.resolve(), args.bib.resolve() if args.bib else None, findings), end="")
 
-    return 1 if any(item.severity == "error" for item in findings) else 0
+    return 1 if has_error else 0
 
 
 if __name__ == "__main__":

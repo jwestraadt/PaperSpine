@@ -30,6 +30,16 @@ METRIC_ONLY_ROW = (
     "| X standard split | Improves accuracy on X | Do NOT claim general superiority |\n"
 )
 
+# Cells are non-empty but placeholder text -> must not count as a mapped row.
+PLACEHOLDER_CLAIM_ROW = (
+    "| 4.2 Main accuracy | TBD | +3.1 acc over best baseline (88.4 vs 85.3) | Table 2 "
+    "| X standard split | Improves accuracy on X | Do NOT claim general superiority |\n"
+)
+SHORT_EVIDENCE_ROW = (
+    "| 4.2 Main accuracy | C1: our method beats prior SOTA on benchmark X | - | Table 2 "
+    "| X standard split | Improves accuracy on X | Do NOT claim general superiority |\n"
+)
+
 
 def _write_results(text: str | None) -> Path:
     tmp = Path(tempfile.mkdtemp())
@@ -63,6 +73,32 @@ class ResultsValidationCheckTests(unittest.TestCase):
         self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
         self.assertIn("Status: FAIL", res.stdout)
         self.assertIn("Contribution Claim Tested", res.stdout)
+
+    def test_placeholder_claim_fails(self) -> None:
+        # A non-empty but placeholder claim (TBD) must not satisfy the gate.
+        out = _write_results("# Results Validation\n\n" + HEADER + PLACEHOLDER_CLAIM_ROW)
+        res = _run(out)
+        self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
+        self.assertIn("placeholder", res.stdout.lower())
+
+    def test_short_evidence_fails(self) -> None:
+        # A one-character evidence cell ('-') is a placeholder, not a result.
+        out = _write_results("# Results Validation\n\n" + HEADER + SHORT_EVIDENCE_ROW)
+        res = _run(out)
+        self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
+        self.assertIn("Result/Evidence", res.stdout)
+
+    def test_terse_concrete_cells_pass(self) -> None:
+        # A bare contribution ID + a short concrete number are valid content;
+        # the gate must not impose a prose-length floor on them.
+        terse_row = (
+            "| 4.2 Accuracy | C1 | AUC 0.92 | Table 2 | matched budget "
+            "| Improves accuracy on X | Do NOT claim general superiority |\n"
+        )
+        out = _write_results("# Results Validation\n\n" + HEADER + terse_row)
+        res = _run(out)
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        self.assertIn("Status: PASS", res.stdout)
 
     def test_evidence_column_titled_result_is_resolved(self) -> None:
         # Regression: the bare "result" term substring-matched the "Results

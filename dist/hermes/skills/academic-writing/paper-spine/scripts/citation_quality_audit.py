@@ -29,7 +29,7 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
-from _paper_spine_utils import markdown_tables, read_config
+from _paper_spine_utils import find_citation_table, read_config, read_text
 
 DOI_RE = re.compile(
     r"\b(?:doi\s*[:=]\s*|https?://doi\.org/|https?://dx\.doi\.org/)?(10\.\d{4,}/[^\s,;)\]]+)",
@@ -228,7 +228,7 @@ def extract_dois(text: str) -> list[str]:
 def parse_citation_rows(path: Path) -> list[dict[str, str]]:
     if not path.exists():
         return []
-    text = path.read_text(encoding="utf-8", errors="ignore")
+    text = read_text(path)
     header, rows = find_citation_table(text)
     if not rows:
         return []
@@ -267,20 +267,6 @@ def normalize_header(value: str) -> str:
     value = re.sub(r"<[^>]+>", " ", value)
     value = re.sub(r"[*_`]", "", value)
     return re.sub(r"\s+", " ", value.strip().lower())
-
-
-def find_citation_table(text: str) -> tuple[list[str], list[list[str]]]:
-    for table in markdown_tables(text):
-        if not table:
-            continue
-        header = table[0]
-        header_text = " ".join(cell.lower() for cell in header)
-        has_reference = any(term in header_text for term in ("citation", "reference", "bibtex"))
-        has_claim = "claim" in header_text
-        has_sentence = "sentence" in header_text
-        if has_reference and has_claim and has_sentence:
-            return header, table[1:]
-    return [], []
 
 
 def title_similarity(a: str, b: str) -> float:
@@ -706,7 +692,7 @@ def main() -> int:
             "output_dir": str(out_dir), "scene": report.scene,
             "verified": report.verified_count, "mismatched": report.mismatched_count,
             "dead": report.dead_count, "overall_score": report.overall_score,
-            "status": status, "error_count": report.error_count,
+            "status": status, "ok": not failures, "error_count": report.error_count,
             "pending_count": report.pending_count,
             "error_ratio": round(error_ratio, 4),
             "pending_ratio": round(pending_ratio, 4),

@@ -7,8 +7,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src" / "scripts"))
 from _paper_spine_utils import (
+    MIN_CELL_CHARS,
+    SHORT_OK_MIN_CHARS,
     CanonParagraph,
     canonical,
+    find_citation_table,
+    is_placeholder,
     is_separator_row,
     make_canon,
     markdown_tables,
@@ -22,8 +26,76 @@ from _paper_spine_utils import (
     split_table_line,
     strip_tex_comments,
     table_rows,
+    verdict_fields,
     year_from_row,
 )
+
+
+class ReadTextEncodingTests(unittest.TestCase):
+    def test_gb18030_chinese_is_preserved(self) -> None:
+        # Regression: checkers that read artifacts with errors="ignore" on utf-8
+        # silently dropped bytes from GB18030-encoded Chinese files. The shared
+        # read_text decodes GB18030 instead of losing the characters.
+        chinese = "深度学习综述：方法与评估的贡献映射"
+        tmp = Path(tempfile.mkdtemp()) / "bank.md"
+        tmp.write_bytes(chinese.encode("gb18030"))
+        self.assertEqual(read_text(tmp).strip(), chinese)
+
+
+class VerdictFieldsTests(unittest.TestCase):
+    def test_pass_and_fail(self) -> None:
+        self.assertEqual(verdict_fields(True), {"status": "PASS", "ok": True})
+        self.assertEqual(verdict_fields(False), {"status": "FAIL", "ok": False})
+
+    def test_ok_is_coerced_to_bool(self) -> None:
+        v = verdict_fields(1)
+        self.assertIs(v["ok"], True)
+
+
+class FindCitationTableTests(unittest.TestCase):
+    BANK = (
+        "# Bank\n\n"
+        "| Reference | Claim | Support Claim Sentence |\n"
+        "|---|---|---|\n"
+        "| Smith 2024 | C1 | The method improves accuracy under matched budgets. |\n"
+    )
+
+    def test_finds_citation_table(self) -> None:
+        header, rows = find_citation_table(self.BANK)
+        self.assertIn("Reference", header)
+        self.assertEqual(len(rows), 1)
+
+    def test_returns_empty_when_absent(self) -> None:
+        header, rows = find_citation_table("| a | b |\n|---|---|\n| 1 | 2 |\n")
+        self.assertEqual((header, rows), ([], []))
+
+
+class IsPlaceholderTests(unittest.TestCase):
+    def test_empty_and_whitespace_are_placeholders(self) -> None:
+        self.assertTrue(is_placeholder(""))
+        self.assertTrue(is_placeholder("   "))
+
+    def test_template_tokens_are_placeholders(self) -> None:
+        for token in ("TODO", "tbd", "N/A", "-", "...", "[fill]", "<x>", "待定"):
+            self.assertTrue(is_placeholder(token), token)
+
+    def test_short_content_is_placeholder_by_default(self) -> None:
+        # Below MIN_CELL_CHARS real characters -> placeholder.
+        self.assertTrue(is_placeholder("x"))
+        self.assertTrue(is_placeholder("too short"))  # 9 < 12
+
+    def test_short_ok_min_lets_labels_through(self) -> None:
+        # Category labels pass the lower floor but empty/placeholder still fails.
+        self.assertFalse(is_placeholder("MAJOR", SHORT_OK_MIN_CHARS))
+        self.assertTrue(is_placeholder("x", SHORT_OK_MIN_CHARS))
+
+    def test_real_prose_passes(self) -> None:
+        self.assertFalse(is_placeholder("a concrete, filled-in decision cell"))
+
+    def test_markdown_emphasis_stripped_before_measuring(self) -> None:
+        # `**x**` has only one real char after stripping emphasis -> placeholder.
+        self.assertTrue(is_placeholder("**x**"))
+        self.assertGreater(MIN_CELL_CHARS, SHORT_OK_MIN_CHARS)
 
 
 class ReadConfigTests(unittest.TestCase):

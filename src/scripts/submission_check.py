@@ -17,6 +17,7 @@ from xml.etree import ElementTree
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _paper_spine_utils import read_config as _shared_read_config
+from _paper_spine_utils import verdict_fields
 
 CITATION_PATTERNS = (
     re.compile(r"\\cite[a-zA-Z]*\s*\{"),
@@ -574,7 +575,7 @@ def main() -> int:
         (output_dir / "submission_check.md").write_text(markdown, encoding="utf-8")
 
     if args.json:
-        print(json.dumps(result.__dict__ | {"ok": result.ok}, ensure_ascii=False, indent=2))
+        print(json.dumps(result.__dict__ | verdict_fields(result.ok), ensure_ascii=False, indent=2))
     if args.markdown or not args.json:
         print(markdown)
     return 0 if result.ok else 1
